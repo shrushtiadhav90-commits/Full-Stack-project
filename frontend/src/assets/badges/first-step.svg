@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" aria-label="First Step badge">
+  <!-- Green circle background -->
+  <circle cx="32" cy="32" r="30" fill="#22C55E" stroke="#16A34A" stroke-width="2"/>
+  <!-- Footstep icon -->
+  <!-- Left foot -->
+  <ellipse cx="26" cy="38" rx="7" ry="10" fill="#DCFCE7" transform="rotate(-15, 26, 38)"/>
+  <!-- Right foot -->
+  <ellipse cx="38" cy="28" rx="7" ry="10" fill="#BBF7D0" transform="rotate(-15, 38, 28)"/>
+  <!-- Label -->
+  <text x="32" y="58" font-family="Nunito, sans-serif" font-size="5.5" font-weight="700"
+        text-anchor="middle" fill="#14532D">FIRST STEP</text>
+</svg>

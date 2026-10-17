@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" aria-label="Rising Star badge">
+  <!-- Purple circle background -->
+  <circle cx="32" cy="32" r="30" fill="#7C3AED" stroke="#6D28D9" stroke-width="2"/>
+  <!-- Upward arrow trend -->
+  <polyline points="14,44 24,34 32,38 50,20" fill="none" stroke="#DDD6FE" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Arrowhead -->
+  <polyline points="44,18 50,20 48,26" fill="none" stroke="#DDD6FE" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Star at top -->
+  <polygon points="50,14 51.5,18.5 56,18.5 52.5,21 53.5,25.5 50,23 46.5,25.5 47.5,21 44,18.5 48.5,18.5"
+           fill="#FDE68A" stroke="#D97706" stroke-width="0.5"/>
+  <!-- Label -->
+  <text x="32" y="57" font-family="Nunito, sans-serif" font-size="5.5" font-weight="700"
+        text-anchor="middle" fill="#DDD6FE">RISING STAR</text>
+</svg>

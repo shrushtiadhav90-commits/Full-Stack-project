@@ -1,0 +1,22 @@
+# ── Development profile overrides ────────────────────────────────────────────
+# Activate with: mvn spring-boot:run "-Dspring-boot.run.profiles=dev"
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate      # keep validate even in dev; Flyway owns the schema
+    show-sql: false           # set to true locally if you need query debugging
+
+  flyway:
+    # In dev, automatically repair a failed migration row in flyway_schema_history
+    # before re-attempting. Safe on a local DB; never set this in prod.
+    repair-on-migrate: true
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
+    com.nexus.quiz: DEBUG
+
+app:
+  cookie:
+    secure: false             # allow non-HTTPS cookies on localhost

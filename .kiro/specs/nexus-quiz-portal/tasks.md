@@ -10,14 +10,14 @@ Full-stack implementation of the Nexus Quiz Portal for Nexus Ranaji English Medi
 
 ### Phase 1 — Project Setup
 
-- [ ] 1. Initialize repository and project scaffolding
-  - [ ] 1.1 Initialize Git repository with `.gitignore` (exclude `*.env`, `target/`, `node_modules/`, `UPLOAD_DIR/`, `*.class`, `.idea/`, `.vscode/`)
+- [x] 1. Initialize repository and project scaffolding
+  - [x] 1.1 Initialize Git repository with `.gitignore` (exclude `*.env`, `target/`, `node_modules/`, `UPLOAD_DIR/`, `*.class`, `.idea/`, `.vscode/`)
     - Create root `README.md` skeleton with prerequisites, startup steps, default admin credentials note, Swagger UI URL, and Postman import instructions
     - Create `.env.example` listing every backend and frontend environment variable key: `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`, `JWT_EXPIRY_MINUTES`, `JWT_REFRESH_EXPIRY_DAYS`, `FRONTEND_URL`, `UPLOAD_DIR`, `ADMIN_DEFAULT_USERNAME`, `ADMIN_DEFAULT_PASSWORD`, `app.cookie.secure`, `VITE_API_BASE_URL`
     - Create `docker-compose.yml` for MySQL 8 container with `MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_ROOT_PASSWORD` env vars and `--default-time-zone=+00:00` command flag (serverTimezone=UTC)
     - _Requirements: 21.12, 22.4_
 
-  - [ ] 1.2 Create Spring Boot Maven project (`pom.xml`) with all pinned dependencies (A11)
+  - [x] 1.2 Create Spring Boot Maven project (`pom.xml`) with all pinned dependencies (A11)
     - Spring Boot parent: `3.3.4`; Java source/target: `21`
     - Dependencies: `spring-boot-starter-web`, `spring-boot-starter-security`, `spring-boot-starter-data-jpa`, `spring-boot-starter-validation`, `spring-boot-starter-mail` (optional), `spring-boot-starter-test`
     - `jjwt-api`, `jjwt-impl`, `jjwt-jackson` all at `0.12.6`
@@ -35,45 +35,49 @@ Full-stack implementation of the Nexus Quiz Portal for Nexus Ranaji English Medi
     - Spring Boot Maven plugin: add `<jvmArgument>-Duser.timezone=UTC</jvmArgument>`
     - _Requirements: 21.11_
 
-  - [ ] 1.3 Create `NexusQuizApplication.java` main class and core `application.yml`
+  - [x] 1.3 Create `NexusQuizApplication.java` main class and core `application.yml`
     - `main()` calls `TimeZone.setDefault(TimeZone.getTimeZone("UTC"))` as the very first line before `SpringApplication.run(...)` (A11)
     - `application.yml`: `spring.jpa.properties.hibernate.jdbc.time_zone=UTC`, `spring.datasource.url` includes `serverTimezone=UTC&useUnicode=true&characterEncoding=utf8`, `spring.jpa.open-in-view=false`, `spring.jpa.hibernate.ddl-auto=validate`, `server.error.include-stacktrace=never`, `spring.flyway.enabled=true`
     - `application-dev.yml`: `app.cookie.secure=false`, `logging.level.org.hibernate.SQL=DEBUG`, `logging.level.org.hibernate.orm.jdbc.bind=TRACE`, `spring.jpa.hibernate.ddl-auto=validate` (keep validate, not create-drop)
     - `application-prod.yml`: `app.cookie.secure=true`, `spring.jpa.hibernate.ddl-auto=validate`
     - _Requirements: 20.1, 20.3, 21.11, 21.12_
 
-  - [ ] 1.4 Write `V1__init_schema.sql` Flyway migration
+  - [x] 1.4 Write `V1__init_schema.sql` Flyway migration
     - Create all tables with exact columns, types, and constraints from the design ER diagram: `users`, `academic_years`, `classes`, `subjects`, `students`, `parent_student`, `faculty_assignments`, `questions`, `question_options`, `quizzes`, `quiz_classes`, `quiz_questions`, `quiz_question_snapshots`, `quiz_attempts`, `attempt_answers`, `badges`, `student_badges`, `notifications`, `refresh_tokens`, `school_settings`, `audit_log`
     - All datetime columns: `DATETIME(6)` stored in UTC
     - Add all indexes listed in design: `quiz_attempts(student_id, quiz_id)`, `quiz_attempts(effective_deadline_utc, status)`, `quizzes(start_time_utc)`, `quizzes(status, start_time_utc)`, `notifications(user_id, is_read)`, `students(class_id)`, `refresh_tokens(token_hash)`, `student_badges(student_id, badge_id)`, `attempt_answers(attempt_id, quiz_question_id)`, `audit_log(admin_user_id, created_at_utc)`
     - Add all unique constraints from design
     - _Requirements: 21.10, 21.12_
 
-  - [ ] 1.5 Write `V2__seed_badges.sql` Flyway migration (A3)
+  - [x] 1.5 Write `V2__seed_badges.sql` Flyway migration (A3)
     - Insert all 8 badge rows: Gold (`SCORE`, `min_percentage=90`, icon `gold.svg`), Silver (`SCORE`, `min_percentage=75`, icon `silver.svg`), Bronze (`SCORE`, `min_percentage=60`, icon `bronze.svg`), First Step (`SPECIAL`, `min_percentage=0`, icon `first-step.svg`), Perfect Score (`SPECIAL`, `min_percentage=100`, icon `perfect-score.svg`), Consistent Learner (`SPECIAL`, `min_percentage=60`, icon `consistent-learner.svg`), Rising Star (`SPECIAL`, `min_percentage=0`, icon `rising-star.svg`), Quiz Champion (`SPECIAL`, `min_percentage=0`, icon `quiz-champion.svg`)
     - Use `INSERT IGNORE` so the migration is idempotent
     - _Requirements: 10.2, 10.3, 10.4, 10.5, 10.6, 10.7, 10.8, 10.9_
 
-  - [ ] 1.6 Create Vite React frontend scaffold and install all pinned dependencies (A11)
+  - [x] 1.6 Create Vite React frontend scaffold and install all pinned dependencies (A11)
     - `npm create vite@latest frontend -- --template react`
     - Pin in `package.json`: `react@18.3.1`, `react-dom@18.3.1`, `react-router-dom@6.26.1`, `axios@1.7.4`, `react-hook-form@7.53.0`, `recharts@2.12.7`, `lucide-react@0.441.0`, `canvas-confetti@1.9.3`, `react-hot-toast@2.4.1`
     - Dev dependencies: `tailwindcss@3.4.10`, `autoprefixer`, `postcss`, `@types/canvas-confetti`
     - Run `npx tailwindcss init -p` to generate `tailwind.config.js` and `postcss.config.js`
     - _Requirements: 18.7_
 
-  - [ ] 1.7 Configure `tailwind.config.js`, `theme.js`, and `index.css` with RGB CSS variable color tokens (A3, should-fix)
+  - [x] 1.7 Configure `tailwind.config.js`, `theme.js`, and `index.css` with RGB CSS variable color tokens (A3, should-fix)
     - `frontend/src/theme.js`: export `defaultColors` object and `toCssVars()` function; export colors as both hex values AND RGB channel CSS variables (e.g., `--color-primary-rgb: 37, 99, 235`) so Tailwind opacity modifiers work
     - `tailwind.config.js`: map Tailwind color tokens using `rgb(var(--color-primary-rgb) / <alpha-value>)` syntax for opacity modifier support; add `fontFamily.sans: ['Nunito', 'Poppins', 'ui-sans-serif', 'system-ui']`; add `borderRadius['2xl']: '1rem'`; set `content: ['./src/**/*.{js,jsx}']`
     - `frontend/src/index.css`: define all CSS custom properties in `:root` for both hex and RGB channel variants as defaults (used before ThemeContext initializes)
     - _Requirements: 17.1, 18.7, 18.10_
 
-  - [ ] 1.8 Create placeholder SVG badge icon files (A3)
+  - [x] 1.8 Create placeholder SVG badge icon files (A3)
     - Create `frontend/src/assets/badges/` directory
     - Create 8 placeholder SVG files: `gold.svg`, `silver.svg`, `bronze.svg`, `first-step.svg`, `perfect-score.svg`, `consistent-learner.svg`, `rising-star.svg`, `quiz-champion.svg`
     - Each SVG is a visually distinct colored circle or shield shape with a letter/symbol label (e.g., "G" for gold) as a design placeholder
     - _Requirements: 10.13, 10.15_
 
-- [ ] 2. Phase 1 Checkpoint
+- [x] 2. Phase 1 Checkpoint
+  - ✅ `mvn compile` — clean (0 errors)
+  - ✅ `npm run build` — clean (dist/ generated, 3.01s)
+  - ✅ All 8 badge SVGs present in `frontend/src/assets/badges/`
+  - ⏳ Flyway migration — requires MySQL credentials; see README for local DB setup
   - Verify Maven build compiles cleanly (`mvn compile`); Flyway migrations apply against the Docker MySQL container with no errors; frontend `npm run build` succeeds; all 8 badge SVGs are present; `tailwind.config.js` RGB tokens render correctly in a test component
 
 ---

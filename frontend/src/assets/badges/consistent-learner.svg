@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" aria-label="Consistent Learner badge">
+  <!-- Teal circle background -->
+  <circle cx="32" cy="32" r="30" fill="#0D9488" stroke="#0F766E" stroke-width="2"/>
+  <!-- Book icon simplified -->
+  <rect x="18" y="18" width="28" height="24" rx="2" fill="#CCFBF1" stroke="#0F766E" stroke-width="1.5"/>
+  <line x1="32" y1="18" x2="32" y2="42" stroke="#0F766E" stroke-width="1.5"/>
+  <!-- 5 lines on right page -->
+  <line x1="34" y1="24" x2="43" y2="24" stroke="#0F766E" stroke-width="1"/>
+  <line x1="34" y1="28" x2="43" y2="28" stroke="#0F766E" stroke-width="1"/>
+  <line x1="34" y1="32" x2="43" y2="32" stroke="#0F766E" stroke-width="1"/>
+  <line x1="34" y1="36" x2="43" y2="36" stroke="#0F766E" stroke-width="1"/>
+  <!-- Checkmark on left page -->
+  <polyline points="21,30 26,35 30,26" fill="none" stroke="#0F766E" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Label -->
+  <text x="32" y="57" font-family="Nunito, sans-serif" font-size="4.5" font-weight="700"
+        text-anchor="middle" fill="#CCFBF1">CONSISTENT LEARNER</text>
+</svg>

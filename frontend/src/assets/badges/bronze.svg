@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" aria-label="Bronze badge">
+  <!-- Bronze circle background -->
+  <circle cx="32" cy="32" r="30" fill="#CD7F32" stroke="#92400E" stroke-width="2"/>
+  <!-- Inner highlight ring -->
+  <circle cx="32" cy="32" r="24" fill="none" stroke="#FCD34D" stroke-width="2" opacity="0.5"/>
+  <!-- Star shape -->
+  <polygon points="32,10 36,24 50,24 39,33 43,47 32,38 21,47 25,33 14,24 28,24"
+           fill="#FDE68A" stroke="#92400E" stroke-width="1.5"/>
+  <!-- Label -->
+  <text x="32" y="56" font-family="Nunito, sans-serif" font-size="6" font-weight="700"
+        text-anchor="middle" fill="#451A03">BRONZE</text>
+</svg>

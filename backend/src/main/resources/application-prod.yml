@@ -1,0 +1,14 @@
+# ── Production profile overrides ─────────────────────────────────────────────
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+app:
+  cookie:
+    secure: true              # HTTPS is required in production
+
+logging:
+  level:
+    root: WARN
+    com.nexus.quiz: INFO

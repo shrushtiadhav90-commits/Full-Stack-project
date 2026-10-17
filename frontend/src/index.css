@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Default CSS custom properties for all brand color tokens.
+ * These values are the coded defaults from theme.js.
+ * ThemeContext will override --color-primary and --color-secondary at runtime
+ * by calling document.documentElement.style.setProperty(...) after fetching
+ * school settings from the API.
+ *
+ * Both the hex values (--color-primary) and the RGB channel strings
+ * (--color-primary-rgb) are declared so that Tailwind opacity modifiers work:
+ *   bg-primary/50  →  rgba(var(--color-primary-rgb), 0.5)
+ */
+:root {
+  /* Primary – blue */
+  --color-primary:          #2563EB;
+  --color-primary-rgb:      37, 99, 235;
+
+  /* Secondary – amber */
+  --color-secondary:        #F59E0B;
+  --color-secondary-rgb:    245, 158, 11;
+
+  /* Success – green */
+  --color-success:          #22C55E;
+  --color-success-rgb:      34, 197, 94;
+
+  /* Error – red */
+  --color-error:            #EF4444;
+  --color-error-rgb:        239, 68, 68;
+
+  /* Warning – orange */
+  --color-warning:          #F97316;
+  --color-warning-rgb:      249, 115, 22;
+
+  /* Background */
+  --color-bg:               #F8FAFC;
+  --color-bg-rgb:           248, 250, 252;
+
+  /* Card */
+  --color-card:             #FFFFFF;
+  --color-card-rgb:         255, 255, 255;
+
+  /* Text */
+  --color-text:             #1E293B;
+  --color-text-rgb:         30, 41, 59;
+}
+
+/* ── Base resets ────────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: 'Nunito', 'Poppins', ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Focus-visible styles for keyboard accessibility ───────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ── Minimum touch target helper ────────────────────────────────────────────── */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
