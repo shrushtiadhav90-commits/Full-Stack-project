@@ -1,0 +1,742 @@
+==============================================================================
+PROJECT REQUIREMENTS: NEXUS QUIZ PORTAL
+School Quiz & Performance Tracking Website
+Nexus Ranaji English Medium School
+==============================================================================
+
+INSTRUCTIONS FOR KIRO
+- Build this as a complete, working full-stack web application exactly as
+  described below.
+- Where something is not specified, choose the simplest sensible option and
+  keep the code clean, commented, and beginner-friendly.
+- Do NOT build anything listed under Section 15 (Out of Scope).
+- Build in this order: (1) project setup, (2) database + authentication,
+  (3) admin module, (4) faculty module, (5) student module, (6) parent
+  module, (7) dashboards/charts, (8) notifications, (9) polish + testing.
+
+
+==============================================================================
+1. PROJECT OVERVIEW
+==============================================================================
+Name: Nexus Quiz Portal
+School: Nexus Ranaji English Medium School
+Purpose: A web portal where faculty create and schedule quizzes, students
+  attempt them, and students, parents, faculty, and the principal can track
+  performance.
+
+Problem solved:
+- Quizzes and results are currently managed manually.
+- Parents have no easy view of their child's performance.
+- The principal has no single view of student progress and faculty activity.
+
+Target users: students, parents, faculty (teachers), and the principal (admin).
+
+Branding:
+- The school has not provided a logo yet. Use a text-based header
+  "Nexus Ranaji English Medium School" with a placeholder logo component.
+- The logo and school colors must be configurable in ONE place (a theme/config
+  file and an Admin "School Settings" page where a logo image can be uploaded
+  later).
+
+
+==============================================================================
+2. USER ROLES & PERMISSIONS
+==============================================================================
+Four roles: STUDENT, PARENT, FACULTY, ADMIN (Admin = Principal).
+
+STUDENT can:
+- Log in, view own dashboard
+- See upcoming/scheduled quizzes for their class
+- Attempt a quiz only inside its scheduled window
+- View own results, quiz history, subject-wise performance, and badges
+- View class leaderboard (if enabled by admin)
+- Change own password, edit basic profile (photo optional)
+Student cannot: see other students' answers/scores (except leaderboard
+  rank/score if enabled), create or edit quizzes.
+
+PARENT can:
+- Log in, view a list of linked children (one or more)
+- For each child: view upcoming quizzes, attempted quizzes, scores, subject-wise
+  performance, performance trend chart, and badges
+- Receive notifications about child's quiz schedule and results
+- Change own password
+Parent cannot: attempt quizzes, see any student who is not linked to them.
+
+FACULTY can:
+- Log in, view own dashboard
+- Manage a question bank (create/edit/delete own questions)
+- Create, edit, schedule, publish, and delete quizzes ONLY for the
+  class + subject combinations assigned to them
+- Grade short-answer responses
+- View performance of students in their assigned classes/subjects (quiz-wise,
+  student-wise, class-wise, question-wise analysis)
+- Export reports (CSV/PDF)
+- Change own password
+Faculty cannot: see data of classes/subjects not assigned to them, manage users.
+
+ADMIN (Principal) can:
+- Everything below, plus view all data
+- Create/edit/deactivate users (students, parents, faculty), including
+  bulk upload via CSV
+- Manage academic years, classes (sections), subjects, faculty-subject-class
+  assignments, and parent-student links
+- View class-wise and subject-wise student progress across the school
+- View faculty activity: quizzes created, quizzes scheduled/conducted,
+  average class performance per faculty, pending grading count
+- Configure badge rules, leaderboard on/off, school settings (name, logo,
+  theme color)
+- Export reports (CSV/PDF)
+
+
+==============================================================================
+3. FUNCTIONAL REQUIREMENTS (FEATURES)
+==============================================================================
+
+3.1 USER & SCHOOL MANAGEMENT (Admin)
+- Create users one by one (name, email/username, role, class for students,
+  phone optional) or bulk upload CSV (provide downloadable CSV templates).
+- System generates a temporary password; user MUST change it on first login.
+- Activate/deactivate users (deactivated users cannot log in; data is kept).
+- Manage Classes (e.g., "Class 6 - A"), Subjects (e.g., "Maths"), and
+  Academic Year. Classes are configurable from Class 1 to Class 12.
+- Assign faculty to subject + class combinations (many-to-many).
+- Link parents to students (a parent can have multiple children; a student can
+  have up to two parents/guardians).
+
+3.2 QUESTION BANK (Faculty)
+- Supported question types in version 1:
+  a) MCQ (single correct answer, 2-6 options)
+  b) True/False
+  c) Short answer (text, graded manually by faculty; optional "expected
+     keywords/model answer" shown to the faculty while grading)
+- Each question has: text, type, subject, class level, topic/chapter (optional),
+  difficulty (Easy/Medium/Hard), marks (default 1), explanation (shown after
+  results if enabled), optional image.
+- Faculty can search/filter the question bank and reuse questions in quizzes.
+
+3.3 QUIZ CREATION & SCHEDULING (Faculty)
+- Quiz fields: title, description/instructions, subject, class (one or more
+  sections), questions (picked from the bank or created inline), total marks
+  (auto-calculated), duration in minutes, start date-time, end date-time,
+  max attempts (default 1), shuffle questions (yes/no), shuffle options
+  (yes/no), show correct answers after submission (yes/no/after quiz end
+  time), passing percentage (default 40%).
+- Quiz status flow: DRAFT -> SCHEDULED -> LIVE -> CLOSED
+  (LIVE/CLOSED are derived from the start/end time; faculty can also
+  manually close early.)
+- A quiz can only be edited while DRAFT or SCHEDULED and before any student
+  has started it. After that, only the end time can be extended.
+- Faculty can duplicate an old quiz as a new draft.
+
+3.3.1 QUIZ ATTEMPT RULES (Student)
+- A student can start a quiz only between start and end time, and only for
+  their own class.
+- The timer is enforced on the SERVER (store attempt start time; compute
+  remaining time on the server). The frontend timer is for display only.
+- One question per screen, with Previous/Next buttons, a question palette
+  showing answered/unanswered/marked-for-review, and a visible timer + progress bar.
+- Answers are auto-saved as the student moves between questions.
+- If the browser is closed or refreshed, the student can resume the same
+  attempt until time runs out.
+- Auto-submit when time ends.
+- A confirmation dialog appears before final submit.
+- MCQ and True/False are auto-graded instantly. Short answers are marked
+  "Pending review" until faculty grade them.
+- Results show: score, percentage, pass/fail, time taken, per-question review
+  (only if "show answers" is enabled), and any new badge earned.
+- Results with short-answer questions show "Partial result" until all
+  short answers are graded, then the final score is calculated and the
+  student is notified.
+
+3.4 GRADING (Faculty)
+- A "Grading queue" page lists pending short-answer responses per quiz.
+- Faculty assign marks (0 to max marks) and optional feedback text per answer.
+- On finishing grading, the attempt is marked GRADED, final score is computed,
+  badges are evaluated, and the student (and linked parents) are notified.
+
+3.5 BADGES & ACHIEVEMENTS
+Score badges (awarded per quiz attempt, admin-editable thresholds):
+- Gold: 90% and above
+- Silver: 75% to 89%
+- Bronze: 60% to 74%
+Special badges (awarded automatically):
+- First Step: completed first quiz
+- Perfect Score: scored 100% in a quiz
+- Consistent Learner: completed 5 quizzes in a row with 60%+
+- Rising Star: score improved in 3 consecutive quizzes of the same subject
+- Quiz Champion: highest score in the class for a quiz
+Each badge has a name, icon, description, and date earned. Show badges on the
+student's profile/dashboard and on the parent's view of that child.
+
+3.6 STUDENT DASHBOARD
+- Greeting with student name, class, and latest badge
+- "Upcoming quizzes" cards with subject, date/time, duration, and a big
+  "Start Quiz" button (enabled only when LIVE)
+- Recent results, average score, total quizzes attempted
+- Subject-wise performance bar chart; score trend line chart
+- Badge shelf (earned badges in color, locked badges greyed out)
+- Quiz history page: filter by subject/date; click for details
+
+3.7 PARENT DASHBOARD
+- Child selector (if multiple children)
+- For selected child: upcoming quizzes, attempted quizzes and scores, average
+  score, subject-wise performance, trend chart, badges, class rank
+  (if leaderboard enabled)
+- Read-only; parents cannot see other children in the class.
+
+3.8 FACULTY DASHBOARD & ANALYTICS
+- My classes/subjects overview, upcoming quizzes, pending grading count
+- Quiz-wise report: average, highest, lowest, pass %, score distribution chart,
+  list of students with scores, students who did not attempt
+- Student-wise report within the faculty's subjects: trend over time
+- Question-wise analysis: % of students who answered each question correctly
+  (to identify difficult topics)
+- Export report to CSV and PDF
+
+3.9 ADMIN (PRINCIPAL) DASHBOARD & ANALYTICS
+- School overview cards: total students, faculty, quizzes this month, overall
+  average score
+- Class-wise progress: average score per class and per subject, trend over
+  time, top/bottom performing students (filterable by class/section)
+- Student drill-down: click any student to see their full performance
+- Faculty progress: for each faculty member - number of quizzes created,
+  scheduled, and conducted, average student score in their quizzes,
+  participation rate, and pending grading count
+- Export reports to CSV and PDF
+
+3.10 NOTIFICATIONS (in-app)
+- Bell icon with unread count and a notifications page
+- Triggers: new quiz scheduled (students + parents), quiz starting soon
+  (reminder 1 day and 1 hour before - scheduled job), result published, short
+  answer graded, new badge earned, account created/password reset
+- Email notifications are a "nice to have" and should be built behind a
+  simple on/off setting (disabled by default).
+
+3.11 LEADERBOARD
+- Per class and per quiz: rank, student first name + last initial, score.
+- Admin can turn the leaderboard on/off for the whole school.
+
+3.12 PROFILE & SETTINGS
+- View/edit profile (name, phone, photo), change password, logout.
+
+
+==============================================================================
+4. AUTHENTICATION & AUTHORIZATION
+==============================================================================
+- Login method: username/email + password (single login page for all roles;
+  user is redirected to their role's dashboard).
+- No public self-registration. Accounts are created only by Admin.
+- First login: forced password change if the password is temporary.
+- Password rules: minimum 8 characters, at least 1 uppercase, 1 lowercase,
+  1 number.
+- Passwords hashed with BCrypt.
+- JWT-based authentication:
+  * Access token (short life, 30 minutes) + refresh token (7 days).
+  * Tokens sent in the Authorization: Bearer header; refresh token stored in an
+    HttpOnly cookie if practical, otherwise in memory/local storage with
+    clear comments.
+- Role-based access control (RBAC) enforced on BOTH backend (Spring Security,
+  method-level @PreAuthorize) and frontend (protected routes per role).
+- Data-level authorization: students only see their own data; parents only see
+  linked children; faculty only see assigned class/subject data.
+- Forgot password: Admin can reset any user's password (generates a new
+  temporary password). If email is configured, provide a "Forgot password"
+  email link with a time-limited token (optional, off by default).
+- Account lockout: lock the account for 15 minutes after 5 failed login
+  attempts.
+- Logout: clears tokens on the client and invalidates the refresh token.
+- Session expiry: auto-redirect to login with a friendly message.
+- Seed: create one default Admin account on first run using credentials from
+  environment variables (never hard-code a password).
+
+
+==============================================================================
+5. PAGES & NAVIGATION
+==============================================================================
+PUBLIC
+- /login                      Login page (school name, friendly illustration)
+- /change-password            Forced change on first login
+- /unauthorized, /404         Error pages
+
+STUDENT (/student/...)
+- /student/dashboard
+- /student/quizzes            Upcoming, live, and past quizzes
+- /student/quizzes/:id/start  Instructions page + start button
+- /student/attempt/:attemptId Quiz-taking screen
+- /student/results/:attemptId Result and review
+- /student/history            Quiz history
+- /student/badges
+- /student/leaderboard
+- /student/notifications, /student/profile
+
+PARENT (/parent/...)
+- /parent/dashboard           Children overview
+- /parent/child/:studentId    Performance, quizzes, badges for that child
+- /parent/notifications, /parent/profile
+
+FACULTY (/faculty/...)
+- /faculty/dashboard
+- /faculty/questions          Question bank (list, create, edit)
+- /faculty/quizzes            My quizzes (list + status filter)
+- /faculty/quizzes/new, /faculty/quizzes/:id/edit
+- /faculty/quizzes/:id/report Quiz report
+- /faculty/grading            Grading queue
+- /faculty/students           Student performance (by class/subject)
+- /faculty/notifications, /faculty/profile
+
+ADMIN (/admin/...)
+- /admin/dashboard
+- /admin/users                List/filter/search; create, edit, deactivate,
+                              bulk upload
+- /admin/classes, /admin/subjects, /admin/assignments
+- /admin/parent-links
+- /admin/progress/classes     Class-wise progress
+- /admin/progress/students/:id
+- /admin/faculty-progress
+- /admin/badges               Badge rules
+- /admin/settings             School name, logo, theme color, leaderboard toggle
+- /admin/reports              Exports
+- /admin/notifications, /admin/profile
+
+Navigation:
+- Desktop: left sidebar with icons + labels, top bar with school name,
+  notification bell, and profile menu.
+- Mobile: top bar + bottom navigation (student/parent) or hamburger drawer
+  (faculty/admin).
+- Breadcrumbs on deep pages; every page has a clear way back.
+
+
+==============================================================================
+6. UI/UX REQUIREMENTS
+==============================================================================
+Audience: school students (primarily children and teens), plus parents and
+staff. The UI must be simple, friendly, and uncluttered.
+
+Style:
+- Bright, friendly, modern; rounded cards (rounded-2xl), soft shadows,
+  large touch-friendly buttons, generous spacing.
+- One main action per screen (e.g., a big "Start Quiz" button).
+- Use simple, short words. Use icons alongside labels.
+- Use the Tailwind color tokens below, defined in ONE theme config so they can
+  be changed to the school colors later:
+    Primary:    #2563EB (blue)
+    Secondary:  #F59E0B (amber/orange)
+    Success:    #22C55E   Error: #EF4444   Warning: #F97316
+    Background: #F8FAFC   Card: #FFFFFF   Text: #1E293B
+- Fonts: "Nunito" or "Poppins" (Google Fonts) for headings and body text.
+- Light theme by default; dark mode is optional (nice to have).
+- Staff (faculty/admin) screens are slightly denser (tables, filters, charts)
+  but follow the same visual style.
+
+Quiz screen (student):
+- Distraction-free: one question at a time, large readable text, big tappable
+  answer options, visible countdown timer (turns amber at 5 minutes and red at
+  1 minute), progress bar, question palette, "Mark for review" button.
+
+Gamification:
+- Colorful badge icons with a small celebration animation (confetti) when a
+  new badge or Gold result is earned. Keep animations subtle and fast.
+- Encouraging messages on results (e.g., "Great effort! Keep going!"),
+  never harsh or shaming language for low scores.
+
+Charts: Recharts - line (trend), bar (subject-wise), pie/donut (pass/fail),
+  histogram-style bar (score distribution).
+
+Responsiveness: fully responsive for mobile (360px+), tablet, and desktop.
+  Test primarily on mobile for student and parent screens.
+
+Accessibility: good color contrast, keyboard navigable, visible focus states,
+  alt text on images, form labels, and error messages next to fields.
+
+States: every list/page must have loading (skeleton/spinner), empty ("No
+  quizzes yet"), and error states with friendly text.
+
+Language: English only (English medium school).
+
+
+==============================================================================
+7. TECHNOLOGY STACK
+==============================================================================
+Frontend:
+- React 18 with Vite
+- JavaScript (JSX)
+- Tailwind CSS
+- React Router v6
+- Axios (with an interceptor for JWT + refresh token handling)
+- React Hook Form for forms and validation
+- Recharts for charts
+- Lucide React for icons
+- react-hot-toast for notifications/toasts
+- canvas-confetti for badge celebrations
+
+Backend:
+- Java 21
+- Spring Boot 3.x (Maven)
+- Spring Web (REST), Spring Security (JWT), Spring Data JPA (Hibernate),
+  Spring Validation
+- Lombok to reduce boilerplate
+- Springdoc OpenAPI (Swagger UI) for API docs
+- OpenCSV or Apache Commons CSV for CSV import/export
+- OpenPDF or iText (open source) for PDF reports
+- Spring @Scheduled for reminder jobs
+- Jakarta Mail (optional, for email)
+
+Database:
+- MySQL 8 (use Flyway for schema migrations, or JPA ddl-auto=update for
+  development only)
+
+Tools / DevOps:
+- Postman collection for API testing
+- Docker Compose file to run MySQL locally (optional but preferred)
+- Git with a clear .gitignore
+
+Hosting (later, not required now):
+- Frontend: Vercel or Netlify; Backend + DB: Render or Railway
+
+
+==============================================================================
+8. DATABASE DESIGN
+==============================================================================
+Main tables (use snake_case, every table has id (BIGINT PK), created_at,
+updated_at):
+
+users
+- id, full_name, username (unique), email (unique, nullable), phone,
+  password_hash, role (STUDENT/PARENT/FACULTY/ADMIN), is_active,
+  must_change_password, failed_login_count, locked_until, profile_photo_url
+
+academic_years: id, name (e.g., "2026-27"), start_date, end_date, is_current
+
+classes: id, name (e.g., "Class 6"), section (e.g., "A"), academic_year_id
+
+subjects: id, name, code
+
+students: id, user_id (FK), class_id (FK), roll_number, admission_number
+
+parent_student: id, parent_user_id (FK), student_id (FK), relation
+  (Father/Mother/Guardian)
+
+faculty_assignments: id, faculty_user_id (FK), class_id (FK), subject_id (FK)
+  (unique on the three columns)
+
+questions: id, created_by (FK users), subject_id, class_level, topic,
+  type (MCQ/TRUE_FALSE/SHORT_ANSWER), text, image_url, difficulty, marks,
+  explanation, model_answer (for short answer), is_active
+
+question_options: id, question_id (FK), option_text, is_correct, sort_order
+
+quizzes: id, title, description, subject_id, created_by (FK), duration_minutes,
+  start_time, end_time, max_attempts, shuffle_questions, shuffle_options,
+  show_answers (NEVER/AFTER_SUBMIT/AFTER_END), pass_percentage, total_marks,
+  status (DRAFT/SCHEDULED/CLOSED)
+
+quiz_classes: id, quiz_id (FK), class_id (FK)
+
+quiz_questions: id, quiz_id (FK), question_id (FK), sort_order, marks
+
+quiz_attempts: id, quiz_id, student_id, attempt_number, started_at,
+  submitted_at, status (IN_PROGRESS/SUBMITTED/GRADED), total_score,
+  percentage, time_taken_seconds, is_auto_submitted
+
+attempt_answers: id, attempt_id (FK), quiz_question_id (FK),
+  selected_option_id (nullable), text_answer (nullable), is_correct (nullable),
+  marks_awarded, grading_status (AUTO_GRADED/PENDING/GRADED), faculty_feedback,
+  marked_for_review
+
+badges: id, code (unique), name, description, icon, type (SCORE/SPECIAL),
+  min_percentage (nullable), is_active
+
+student_badges: id, student_id (FK), badge_id (FK), quiz_attempt_id
+  (nullable FK), awarded_at
+
+notifications: id, user_id (FK), title, message, type, link, is_read
+
+refresh_tokens: id, user_id (FK), token_hash, expires_at, revoked
+
+school_settings: id, school_name, logo_url, primary_color,
+  leaderboard_enabled, email_notifications_enabled
+
+Key relationships:
+- A class has many students; a student belongs to one class.
+- A parent links to many students (via parent_student).
+- A faculty member is assigned to many (class, subject) pairs.
+- A quiz has many questions and targets one or more classes.
+- A student has many attempts; an attempt has many answers.
+
+Indexes: on quiz_attempts (student_id, quiz_id), quizzes (start_time),
+  notifications (user_id, is_read), students (class_id).
+
+
+==============================================================================
+9. API REQUIREMENTS
+==============================================================================
+Base path: /api/v1. JSON requests/responses. Standard response envelope:
+{ "success": true/false, "message": "...", "data": {...} }.
+Use proper HTTP status codes (200, 201, 400, 401, 403, 404, 409, 500).
+Paginate list endpoints (page, size, sort).
+
+AUTH
+- POST /auth/login
+- POST /auth/refresh
+- POST /auth/logout
+- POST /auth/change-password
+- GET  /auth/me
+
+ADMIN
+- CRUD /admin/users, PATCH /admin/users/{id}/status,
+  POST /admin/users/{id}/reset-password, POST /admin/users/bulk-upload,
+  GET /admin/users/template
+- CRUD /admin/classes, /admin/subjects, /admin/academic-years
+- CRUD /admin/faculty-assignments
+- POST/DELETE /admin/parent-links
+- GET  /admin/analytics/overview
+- GET  /admin/analytics/classes?classId=&subjectId=
+- GET  /admin/analytics/students/{studentId}
+- GET  /admin/analytics/faculty
+- GET/PUT /admin/badges, GET/PUT /admin/settings
+- GET  /admin/reports/export?type=&format=csv|pdf
+
+FACULTY
+- CRUD /faculty/questions (with search + filters)
+- CRUD /faculty/quizzes, POST /faculty/quizzes/{id}/publish,
+  POST /faculty/quizzes/{id}/close, POST /faculty/quizzes/{id}/duplicate
+- GET  /faculty/quizzes/{id}/report
+- GET  /faculty/grading/pending, PUT /faculty/grading/answers/{answerId}
+- GET  /faculty/analytics/students?classId=&subjectId=
+- GET  /faculty/reports/export
+
+STUDENT
+- GET  /student/dashboard
+- GET  /student/quizzes?status=upcoming|live|past
+- POST /student/quizzes/{quizId}/start        (creates attempt, returns
+                                               questions without answers)
+- PUT  /student/attempts/{attemptId}/answers  (auto-save)
+- POST /student/attempts/{attemptId}/submit
+- GET  /student/attempts/{attemptId}/result
+- GET  /student/history, GET /student/badges, GET /student/leaderboard
+
+PARENT
+- GET  /parent/children
+- GET  /parent/children/{studentId}/dashboard
+- GET  /parent/children/{studentId}/results
+- GET  /parent/children/{studentId}/badges
+
+COMMON
+- GET  /notifications, PATCH /notifications/{id}/read,
+  PATCH /notifications/read-all
+- PUT  /profile
+
+Validation & error handling:
+- Validate all inputs (Bean Validation). Return field-level errors in a
+  consistent format.
+- Global exception handler (@ControllerAdvice) with friendly messages.
+- NEVER send correct answers to the student's browser while a quiz is in
+  progress.
+- Return 403 if a user requests data they are not allowed to access.
+
+
+==============================================================================
+10. NON-FUNCTIONAL REQUIREMENTS
+==============================================================================
+Security:
+- BCrypt password hashing; JWT secret from environment variables
+- Input validation + output escaping (prevent XSS); parameterized queries via
+  JPA (prevent SQL injection)
+- CORS restricted to the frontend origin
+- Rate limiting on /auth/login (basic, e.g., Bucket4j or a simple filter)
+- Secure HTTP headers; HTTPS in production
+- File uploads (logo, photos, CSV): validate type and size (max 2 MB images,
+  max 5 MB CSV)
+- Audit log (simple) for admin actions: user create/deactivate, password reset,
+  settings change
+
+Performance:
+- Pages load in under 3 seconds on a normal connection; API responses under
+  500 ms for common requests
+- Support at least 300 concurrent students taking a quiz at the same time
+  (efficient auto-save: update only the changed answer)
+- Use pagination and DB indexes
+
+Reliability & data:
+- Server-side timers and auto-submit job (scheduled task every minute closes
+  expired attempts)
+- Daily DB backup instructions in README
+
+Scalability: stateless backend (JWT) so it can run multiple instances later.
+
+Browser support: latest Chrome, Edge, Firefox, Safari; Android Chrome and
+  iOS Safari.
+
+Maintainability: clean layered architecture, meaningful names, comments for
+  non-obvious logic, no hard-coded secrets.
+
+
+==============================================================================
+11. PROJECT STRUCTURE
+==============================================================================
+nexus-quiz-portal/
+|-- README.md
+|-- docker-compose.yml          (MySQL)
+|-- backend/
+|   |-- pom.xml
+|   `-- src/main/java/com/nexus/quiz/
+|       |-- config/             Security, CORS, OpenAPI, scheduler config
+|       |-- security/           JWT filter, token service, user details
+|       |-- controller/         REST controllers (by role)
+|       |-- service/            Business logic
+|       |-- repository/         Spring Data JPA repositories
+|       |-- entity/             JPA entities
+|       |-- dto/                Request/response DTOs
+|       |-- exception/          Custom exceptions + global handler
+|       |-- scheduler/          Reminders, auto-submit job
+|       `-- util/               Helpers (CSV, PDF, etc.)
+|   `-- src/main/resources/
+|       |-- application.yml, application-dev.yml
+|       `-- db/migration/       Flyway SQL files (if used)
+`-- frontend/
+    |-- package.json, vite.config.js, tailwind.config.js
+    `-- src/
+        |-- api/                Axios instance + API functions
+        |-- assets/             Images, illustrations, badge icons
+        |-- components/         Reusable UI (Button, Card, Modal, Table, Charts)
+        |-- layouts/            StudentLayout, ParentLayout, FacultyLayout,
+        |                       AdminLayout
+        |-- pages/
+        |   |-- auth/, student/, parent/, faculty/, admin/
+        |-- routes/             ProtectedRoute, role-based routing
+        |-- context/            AuthContext, ThemeContext
+        |-- hooks/              Custom hooks
+        |-- utils/              Formatters, constants
+        `-- theme.js            School colors/branding in ONE place
+
+Conventions:
+- Backend: Java classes in PascalCase, methods/variables in camelCase,
+  REST paths in kebab-case, DB columns in snake_case.
+- Frontend: components in PascalCase files, hooks start with "use".
+- Use DTOs; never expose entities directly from controllers.
+- Keep controllers thin and put logic in services.
+
+
+==============================================================================
+12. THIRD-PARTY INTEGRATIONS
+==============================================================================
+Required for v1: none (the app must work fully without external paid
+services).
+
+Optional (build behind config flags, disabled by default):
+- Email (SMTP, e.g., Gmail SMTP or Brevo) for notifications and password reset
+- File storage: local disk storage for uploads in v1 (abstract behind a service
+  so cloud storage such as S3/Cloudinary can be plugged in later)
+
+Not now: payments, SMS/WhatsApp, AI APIs, analytics.
+
+
+==============================================================================
+13. ENVIRONMENT & SETUP
+==============================================================================
+Environment variables (names only; provide a .env.example, never commit real
+values):
+
+Backend:
+- DB_URL, DB_USERNAME, DB_PASSWORD
+- JWT_SECRET, JWT_ACCESS_EXPIRY_MINUTES, JWT_REFRESH_EXPIRY_DAYS
+- ADMIN_DEFAULT_USERNAME, ADMIN_DEFAULT_PASSWORD
+- FRONTEND_URL (for CORS)
+- UPLOAD_DIR
+- MAIL_HOST, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD, EMAIL_ENABLED (optional)
+
+Frontend:
+- VITE_API_BASE_URL
+
+README must include:
+1. Prerequisites (JDK 21, Node 18+, MySQL 8 or Docker)
+2. How to start MySQL (docker compose up)
+3. How to run the backend (mvn spring-boot:run) and the frontend
+   (npm install, npm run dev)
+4. Default admin login info (from env) and the first-login steps
+5. Swagger UI URL and the Postman collection import steps
+6. Basic backup/restore notes
+
+Seed / demo data (only when a "dev" profile is active):
+- 1 admin, 3 faculty, 2 classes (6-A, 7-A), 5 subjects, 10 students,
+  6 parents (some with two children), 30 sample questions of all three types,
+  and 4 sample quizzes (one upcoming, one live, two completed) with a few
+  attempts so dashboards and charts show data.
+- Default badge rules pre-loaded.
+
+
+==============================================================================
+14. TESTING & ACCEPTANCE CRITERIA
+==============================================================================
+Testing:
+- Backend: JUnit 5 + Mockito for service tests (auto-grading, badge rules,
+  attempt timing, authorization checks); a few Spring Boot integration tests
+  for auth and quiz attempt flow.
+- Frontend: manual testing checklist in README (Vitest/React Testing Library
+  optional for key components).
+- Postman collection covering all main endpoints.
+
+Acceptance criteria (the project is "done" when ALL are true):
+
+AUTH
+[ ] Each role can log in and lands on its own dashboard
+[ ] Wrong password shows an error; 5 failures lock the account for 15 min
+[ ] Temporary password forces a change on first login
+[ ] A student cannot open /faculty or /admin pages or APIs (403)
+
+ADMIN
+[ ] Can create users individually and via CSV; deactivated users cannot log in
+[ ] Can create classes/subjects, assign faculty, and link parents to students
+[ ] Principal can view class-wise progress and per-faculty progress
+
+FACULTY
+[ ] Can create MCQ, True/False, and Short Answer questions
+[ ] Can create, schedule, and publish a quiz only for assigned class/subject
+[ ] Can grade short answers; student receives the final result and notification
+[ ] Can view quiz report and subject-wise student performance; can export CSV
+
+STUDENT
+[ ] Sees only quizzes for their class; Start button works only in the
+    scheduled window
+[ ] Timer is server-enforced; refresh keeps progress; auto-submit works
+[ ] MCQ/True-False scored instantly; short answers show "Pending review"
+[ ] Result, history, subject chart, and correct badges (Gold/Silver/Bronze and
+    special) are displayed
+
+PARENT
+[ ] Sees only linked children; sees scores, trends, quizzes, and badges
+[ ] Cannot access any other student's data (403)
+
+GENERAL
+[ ] Notifications are generated for the triggers listed in section 3.10
+[ ] Fully usable on a 360px-wide mobile screen
+[ ] No correct answers are exposed to the browser during an active quiz
+[ ] App runs end-to-end following only the README steps
+
+
+==============================================================================
+15. OUT OF SCOPE / FUTURE ENHANCEMENTS
+==============================================================================
+Do NOT build now:
+- Online payments or fees management
+- Live classes, video calls, or chat/messaging
+- AI features (AI question generation, AI proctoring, auto-grading of short
+  answers)
+- Camera/screen proctoring or tab-switch detection
+- Attendance, timetable, homework, or report-card modules
+- Native mobile apps (the web app must be mobile-responsive instead)
+- SMS/WhatsApp notifications
+- Multi-school (multi-tenant) support
+- Multi-language support
+- Question types beyond MCQ, True/False, and Short Answer (e.g., match the
+  following, fill in the blanks, essay)
+
+Possible future enhancements:
+- School logo and final brand colors once provided
+- Email/WhatsApp notifications, study material uploads, PWA/mobile app,
+  parent-teacher messaging, adaptive practice quizzes, and AI-assisted
+  question generation
+
+==============================================================================
+END OF REQUIREMENTS
+==============================================================================
