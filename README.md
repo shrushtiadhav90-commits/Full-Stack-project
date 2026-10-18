@@ -43,6 +43,10 @@ DB_USERNAME=nexus_user
 DB_PASSWORD=your_password
 ```
 
+Spring Boot loads `backend/.env` as a properties file when the backend is launched
+from the `backend/` folder. Keep the file in `KEY=value` format; it is excluded
+from Git.
+
 Flyway will automatically apply all migrations (`V1__init_schema.sql`,
 `V2__seed_badges.sql`, …) on the first startup.
 
@@ -56,7 +60,8 @@ cd backend
 # Copy and fill environment variables
 copy .env.example .env
 
-# Run – note the quoting: PowerShell needs the -D flag quoted as a single token
+# Run (the .env file is loaded from this backend folder)
+# PowerShell needs the -D flag quoted as a single token when setting the profile
 mvn spring-boot:run "-Dspring-boot.run.profiles=dev"
 ```
 
