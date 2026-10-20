@@ -6,6 +6,7 @@ import com.nexus.quiz.repository.RefreshTokenRepository;
 import com.nexus.quiz.repository.UserRepository;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,16 +21,20 @@ import java.util.UUID;
 @Service
 public class RefreshTokenService {
 
-    private static final Duration REFRESH_TOKEN_LIFETIME = Duration.ofDays(7);
-
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserRepository userRepository;
+    private final Duration refreshTokenLifetime;
 
     public RefreshTokenService(
             RefreshTokenRepository refreshTokenRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            @Value("${app.jwt.refresh-expiry-days:7}") long refreshExpiryDays) {
         this.refreshTokenRepository = refreshTokenRepository;
         this.userRepository = userRepository;
+        if (refreshExpiryDays <= 0) {
+            throw new IllegalArgumentException("JWT_REFRESH_EXPIRY_DAYS must be positive");
+        }
+        this.refreshTokenLifetime = Duration.ofDays(refreshExpiryDays);
     }
 
     @Transactional
@@ -38,7 +43,7 @@ public class RefreshTokenService {
         RefreshToken refreshToken = RefreshToken.builder()
                 .userId(userId)
                 .tokenHash(hashToken(token))
-                .expiresAtUtc(Instant.now().plus(REFRESH_TOKEN_LIFETIME))
+                .expiresAtUtc(Instant.now().plus(refreshTokenLifetime))
                 .revoked(false)
                 .build();
         refreshTokenRepository.save(refreshToken);
@@ -64,6 +69,18 @@ public class RefreshTokenService {
                     refreshToken.setRevoked(true);
                     refreshTokenRepository.save(refreshToken);
                 });
+    }
+
+    @Transactional
+    public void revokeOtherRefreshTokens(Long userId, String currentToken) {
+        String currentTokenHash = currentToken == null || currentToken.isBlank()
+                ? null
+                : hashToken(currentToken);
+        refreshTokenRepository.revokeOtherActiveTokens(userId, currentTokenHash);
+    }
+
+    public long getRefreshTokenMaxAgeSeconds() {
+        return refreshTokenLifetime.toSeconds();
     }
 
     @Transactional

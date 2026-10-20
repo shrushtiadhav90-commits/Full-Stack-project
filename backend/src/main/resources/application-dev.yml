@@ -20,3 +20,4 @@ logging:
 app:
   cookie:
     secure: false             # allow non-HTTPS cookies on localhost
+    same-site: Lax

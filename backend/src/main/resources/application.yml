@@ -68,11 +68,12 @@ app:
     refresh-expiry-days: ${JWT_REFRESH_EXPIRY_DAYS:7}
   cookie:
     secure: true                  # overridden to false in application-dev.yml
+    same-site: Strict
   frontend-url: ${FRONTEND_URL:http://localhost:5173}
   upload-dir: ${UPLOAD_DIR:uploads}
   admin:
-    default-username: ${ADMIN_DEFAULT_USERNAME:admin}
-    default-password: ${ADMIN_DEFAULT_PASSWORD:Admin@1234}
+    default-username: ${ADMIN_DEFAULT_USERNAME:}
+    default-password: ${ADMIN_DEFAULT_PASSWORD:}
   email:
     enabled: ${EMAIL_ENABLED:false}
   storage:
