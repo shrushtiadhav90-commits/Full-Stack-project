@@ -3,10 +3,12 @@ package com.nexus.quiz.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.Instant;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "academic_years")
+@Table(name = "academic_years",
+        uniqueConstraints = @UniqueConstraint(name = "uq_academic_years_name", columnNames = "name"))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -32,4 +34,23 @@ public class AcademicYear {
     @Column(name = "is_current", nullable = false)
     @Builder.Default
     private Boolean isCurrent = false;
+
+    @Column(name = "created_at_utc", nullable = false, updatable = false,
+            columnDefinition = "DATETIME(6)")
+    private Instant createdAtUtc;
+
+    @Column(name = "updated_at_utc", nullable = false, columnDefinition = "DATETIME(6)")
+    private Instant updatedAtUtc;
+
+    @PrePersist
+    void prePersist() {
+        Instant now = Instant.now();
+        this.createdAtUtc = now;
+        this.updatedAtUtc = now;
+    }
+
+    @PreUpdate
+    void preUpdate() {
+        this.updatedAtUtc = Instant.now();
+    }
 }

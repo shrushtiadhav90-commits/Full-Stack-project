@@ -1,12 +1,14 @@
 package com.nexus.quiz.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users", uniqueConstraints =
+        @UniqueConstraint(name = "uq_users_username", columnNames = "username"))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -18,10 +20,10 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "full_name", nullable = false, length = 150)
+    @Column(name = "full_name", nullable = false, length = 100)
     private String fullName;
 
-    @Column(name = "username", nullable = false, unique = true, length = 50)
+    @Column(name = "username", nullable = false, length = 50)
     private String username;
 
     /**
@@ -33,8 +35,8 @@ public class User {
     @Column(name = "phone", length = 20)
     private String phone;
 
-    /** BCrypt hash. Never returned in any API response. */
-    @Column(name = "password_hash", nullable = false, length = 72)
+    @JsonIgnore
+    @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
 
     @Enumerated(EnumType.STRING)
@@ -54,16 +56,17 @@ public class User {
     private Integer failedLoginCount = 0;
 
     /** UTC instant until which the account is locked. Null means not locked. */
-    @Column(name = "locked_until_utc")
+    @Column(name = "locked_until_utc", columnDefinition = "DATETIME(6)")
     private Instant lockedUntilUtc;
 
-    @Column(name = "profile_photo_url", length = 500)
+    @Column(name = "profile_photo_url", length = 512)
     private String profilePhotoUrl;
 
-    @Column(name = "created_at_utc", nullable = false, updatable = false)
+    @Column(name = "created_at_utc", nullable = false, updatable = false,
+            columnDefinition = "DATETIME(6)")
     private Instant createdAtUtc;
 
-    @Column(name = "updated_at_utc", nullable = false)
+    @Column(name = "updated_at_utc", nullable = false, columnDefinition = "DATETIME(6)")
     private Instant updatedAtUtc;
 
     @PrePersist
