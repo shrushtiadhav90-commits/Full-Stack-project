@@ -34,6 +34,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -279,9 +280,23 @@ public class AcademicService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<FacultyAssignmentResponse> listFacultyAssignments(int page, int size, String sort) {
+    public PageResponse<FacultyAssignmentResponse> listFacultyAssignments(
+            int page, int size, String sort, Long facultyUserId, Long classId, Long subjectId) {
         Pageable pageable = pageable(page, size, sort, Set.of("id", "createdAtUtc"));
-        return PageResponse.from(facultyAssignmentRepository.findAllBy(pageable).map(this::toResponse));
+        Specification<FacultyAssignment> specification = Specification.where(null);
+        if (facultyUserId != null) {
+            specification = specification.and((root, query, builder) ->
+                    builder.equal(root.get("faculty").get("id"), facultyUserId));
+        }
+        if (classId != null) {
+            specification = specification.and((root, query, builder) ->
+                    builder.equal(root.get("schoolClass").get("id"), classId));
+        }
+        if (subjectId != null) {
+            specification = specification.and((root, query, builder) ->
+                    builder.equal(root.get("subject").get("id"), subjectId));
+        }
+        return PageResponse.from(facultyAssignmentRepository.findAll(specification, pageable).map(this::toResponse));
     }
 
     @Transactional

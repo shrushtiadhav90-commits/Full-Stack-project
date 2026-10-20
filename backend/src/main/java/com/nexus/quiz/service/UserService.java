@@ -220,6 +220,12 @@ public class UserService {
         return PageResponse.from(result);
     }
 
+    @Transactional(readOnly = true)
+    public UserSummaryResponse getUser(Long userId) {
+        User user = findUser(userId);
+        return toSummary(user, studentClassFor(userId));
+    }
+
     public BulkUserResponse bulkUploadUsers(Long adminUserId, MultipartFile file, Role role)
             throws IOException {
         List<String> headers = headersFor(role);
