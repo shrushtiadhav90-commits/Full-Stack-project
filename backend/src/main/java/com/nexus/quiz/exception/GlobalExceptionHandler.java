@@ -67,6 +67,11 @@ public class GlobalExceptionHandler {
         return failure(HttpStatus.BAD_REQUEST, "Request body is invalid", null);
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidArgument(IllegalArgumentException exception) {
+        return failure(HttpStatus.BAD_REQUEST, exception.getMessage(), null);
+    }
+
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ApiResponse<Void>> handleAuthentication(AuthenticationException exception) {
         return failure(HttpStatus.UNAUTHORIZED, exception.getMessage(), null);
@@ -85,6 +90,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiResponse<Void>> handleConflict() {
         return failure(HttpStatus.CONFLICT, "The request conflicts with an existing resource", null);
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ApiResponse<Void>> handleConflict(ConflictException exception) {
+        return failure(HttpStatus.CONFLICT, exception.getMessage(), null);
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleResourceNotFound(ResourceNotFoundException exception) {
+        return failure(HttpStatus.NOT_FOUND, exception.getMessage(), null);
     }
 
     @ExceptionHandler(Exception.class)

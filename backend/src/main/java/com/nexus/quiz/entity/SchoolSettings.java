@@ -15,8 +15,8 @@ import java.time.Instant;
 public class SchoolSettings {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Builder.Default
+    private Long id = 1L;
 
     @Column(name = "school_name", nullable = false, length = 200)
     @Builder.Default
@@ -47,6 +47,7 @@ public class SchoolSettings {
     @PrePersist
     @PreUpdate
     void updateTimestamp() {
+        id = 1L;
         updatedAtUtc = Instant.now();
     }
 }
