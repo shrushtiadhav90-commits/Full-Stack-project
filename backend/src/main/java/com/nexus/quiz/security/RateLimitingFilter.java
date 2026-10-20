@@ -14,6 +14,7 @@ import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -31,22 +32,35 @@ import java.util.concurrent.atomic.AtomicLong;
 public class RateLimitingFilter extends OncePerRequestFilter {
 
     private static final String LOGIN_PATH = "/api/v1/auth/login";
-    private static final int IP_REQUESTS_PER_MINUTE = 300;
-    private static final int USER_REQUESTS_PER_MINUTE = 5;
     private static final long BUCKET_IDLE_TIMEOUT_NANOS = Duration.ofMinutes(10).toNanos();
 
     private final ObjectMapper objectMapper;
+    private final int ipRequestsPerMinute;
+    private final int usernameRequestsPerMinute;
     private final Map<String, BucketEntry> ipBuckets = new ConcurrentHashMap<>();
     private final Map<String, BucketEntry> usernameBuckets = new ConcurrentHashMap<>();
     private final AtomicLong requestCount = new AtomicLong();
 
-    public RateLimitingFilter(ObjectMapper objectMapper) {
+    public RateLimitingFilter(
+            ObjectMapper objectMapper,
+            @Value("${app.rate-limit.login.ip-requests-per-minute:20}") int ipRequestsPerMinute,
+            @Value("${app.rate-limit.login.username-requests-per-minute:5}") int usernameRequestsPerMinute) {
+        if (ipRequestsPerMinute < 1 || usernameRequestsPerMinute < 1) {
+            throw new IllegalArgumentException("Login rate limits must be positive");
+        }
         this.objectMapper = objectMapper;
+        this.ipRequestsPerMinute = ipRequestsPerMinute;
+        this.usernameRequestsPerMinute = usernameRequestsPerMinute;
     }
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !HttpMethod.POST.matches(request.getMethod()) || !LOGIN_PATH.equals(request.getServletPath());
+        String requestPath = request.getRequestURI();
+        String contextPath = request.getContextPath();
+        if (contextPath != null && !contextPath.isEmpty() && requestPath.startsWith(contextPath)) {
+            requestPath = requestPath.substring(contextPath.length());
+        }
+        return !HttpMethod.POST.matches(request.getMethod()) || !LOGIN_PATH.equals(requestPath);
     }
 
     @Override
@@ -55,7 +69,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
         long now = System.nanoTime();
-        ConsumptionProbe ipProbe = getBucket(ipBuckets, clientIp(request), IP_REQUESTS_PER_MINUTE, now)
+        ConsumptionProbe ipProbe = getBucket(ipBuckets, clientIp(request), ipRequestsPerMinute, now)
                 .tryConsumeAndReturnRemaining(1);
         if (!ipProbe.isConsumed()) {
             writeRateLimitResponse(response, ipProbe);
@@ -66,7 +80,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         ConsumptionProbe usernameProbe = getBucket(
                 usernameBuckets,
                 loginIdentifier(cachedRequest),
-                USER_REQUESTS_PER_MINUTE,
+                usernameRequestsPerMinute,
                 now).tryConsumeAndReturnRemaining(1);
         if (!usernameProbe.isConsumed()) {
             writeRateLimitResponse(response, usernameProbe);
@@ -123,10 +137,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     private String loginIdentifier(CachedBodyRequest request) {
         try {
             JsonNode body = objectMapper.readTree(request.body);
-            JsonNode identifier = body == null ? null : body.get("username");
-            if (identifier == null || !identifier.isTextual() || identifier.asText().isBlank()) {
-                identifier = body == null ? null : body.get("email");
-            }
+            JsonNode identifier = body == null ? null : body.get("usernameOrEmail");
             if (identifier == null || !identifier.isTextual() || identifier.asText().isBlank()) {
                 return "unknown";
             }
