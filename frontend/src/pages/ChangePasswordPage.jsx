@@ -49,19 +49,22 @@ export default function ChangePasswordPage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-bg px-4 py-8">
-      <section className="w-full max-w-lg rounded-2xl bg-card p-6 shadow-card sm:p-9">
+      <section className="page-enter w-full max-w-lg overflow-hidden rounded-2xl border border-border bg-card shadow-card">
         <header className="mb-7">
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/15 text-primary">
-            <LockKeyhole className="h-6 w-6" aria-hidden="true" />
-          </div>
-          <h1 className="text-2xl font-extrabold text-primary">Set a new password</h1>
-          <p className="mt-2 text-sm leading-relaxed text-app-text/75">
+          <div className="bg-gradient-to-r from-primary-dark to-primary px-6 py-7 text-card sm:px-9">
+            <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-card/10 text-secondary ring-1 ring-card/15">
+              <LockKeyhole className="h-5 w-5" aria-hidden="true" />
+            </div>
+            <h1 className="text-2xl font-semibold">Set a new password</h1>
+            <p className="mt-2 text-sm leading-relaxed text-card/80">
             For your security, choose a new password to continue to the portal.
-          </p>
+            </p>
+          </div>
         </header>
 
+        <div className="px-6 pb-7 sm:px-9 sm:pb-9">
         {serverError && (
-          <div className="mb-5 rounded-xl border border-error/30 bg-error/10 px-4 py-3 text-sm font-semibold text-app-text" role="alert">
+          <div className="mb-5 rounded-xl border border-error/25 bg-error/10 px-4 py-3 text-sm font-semibold text-primary-dark" role="alert">
             {serverError}
           </div>
         )}
@@ -77,7 +80,7 @@ export default function ChangePasswordPage() {
               autoComplete="current-password"
               aria-invalid={Boolean(errors.currentPassword)}
               aria-describedby={errors.currentPassword ? 'current-password-error' : undefined}
-              className="min-h-12 w-full rounded-xl border border-primary/20 bg-bg px-4 py-3 text-base text-app-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="min-h-14 w-full rounded-xl border border-border bg-bg px-4 py-3.5 text-base text-app-text transition duration-150 focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/15"
               {...register('currentPassword', { required: 'Enter your current password' })}
             />
             {errors.currentPassword && (
@@ -97,14 +100,14 @@ export default function ChangePasswordPage() {
               autoComplete="new-password"
               aria-invalid={Boolean(errors.newPassword)}
               aria-describedby="password-rules new-password-error"
-              className="min-h-12 w-full rounded-xl border border-primary/20 bg-bg px-4 py-3 text-base text-app-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="min-h-14 w-full rounded-xl border border-border bg-bg px-4 py-3.5 text-base text-app-text transition duration-150 focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/15"
               {...register('newPassword', {
                 required: 'Enter a new password',
                 validate: (value) => passwordRules.every((rule) => rule.test(value))
                   || 'Password must meet all the requirements below',
               })}
             />
-            <ul id="password-rules" className="mt-2 space-y-1 text-sm text-app-text/75">
+            <ul id="password-rules" className="mt-3 space-y-1.5 rounded-xl bg-bg p-3 text-sm text-muted">
               {passwordRules.map((rule) => {
                 const passed = rule.test(newPassword);
                 return (
@@ -132,7 +135,7 @@ export default function ChangePasswordPage() {
               autoComplete="new-password"
               aria-invalid={Boolean(errors.confirmPassword)}
               aria-describedby={errors.confirmPassword ? 'confirm-password-error' : undefined}
-              className="min-h-12 w-full rounded-xl border border-primary/20 bg-bg px-4 py-3 text-base text-app-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="min-h-14 w-full rounded-xl border border-border bg-bg px-4 py-3.5 text-base text-app-text transition duration-150 focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/15"
               {...register('confirmPassword', {
                 required: 'Confirm your new password',
                 validate: (value) => value === newPassword || 'Passwords do not match',
@@ -148,12 +151,13 @@ export default function ChangePasswordPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-base font-extrabold text-card transition hover:bg-primary/90 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-70"
+            className="flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3.5 text-base font-semibold text-card shadow-sm transition duration-150 hover:bg-primary/90 active:scale-[0.99] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-55"
           >
             {isSubmitting && <LoaderCircle className="h-5 w-5 animate-spin" aria-hidden="true" />}
             {isSubmitting ? 'Saving password…' : 'Save new password'}
           </button>
         </form>
+        </div>
       </section>
     </main>
   );

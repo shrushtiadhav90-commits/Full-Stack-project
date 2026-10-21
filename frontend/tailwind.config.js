@@ -5,38 +5,24 @@ export default {
 
   theme: {
     extend: {
-      // ── Color tokens via CSS variables ─────────────────────────────────────
-      // Using the rgb(var(...) / <alpha>) syntax so Tailwind's opacity
-      // modifiers (e.g. bg-primary/50) work correctly with ThemeContext overrides.
       colors: {
-        primary:   ({ opacityValue }) =>
-          opacityValue !== undefined
-            ? `rgba(var(--color-primary-rgb), ${opacityValue})`
-            : 'var(--color-primary)',
-        secondary: ({ opacityValue }) =>
-          opacityValue !== undefined
-            ? `rgba(var(--color-secondary-rgb), ${opacityValue})`
-            : 'var(--color-secondary)',
-        success:   ({ opacityValue }) =>
-          opacityValue !== undefined
-            ? `rgba(var(--color-success-rgb), ${opacityValue})`
-            : 'var(--color-success)',
-        error:     ({ opacityValue }) =>
-          opacityValue !== undefined
-            ? `rgba(var(--color-error-rgb), ${opacityValue})`
-            : 'var(--color-error)',
-        warning:   ({ opacityValue }) =>
-          opacityValue !== undefined
-            ? `rgba(var(--color-warning-rgb), ${opacityValue})`
-            : 'var(--color-warning)',
-        bg:        'var(--color-bg)',
-        card:      'var(--color-card)',
-        'app-text':'var(--color-text)',
+        primary: 'rgb(var(--color-primary) / <alpha-value>)',
+        'primary-dark': 'rgb(var(--color-primary-dark) / <alpha-value>)',
+        secondary: 'rgb(var(--color-secondary) / <alpha-value>)',
+        success: 'rgb(var(--color-success) / <alpha-value>)',
+        error: 'rgb(var(--color-error) / <alpha-value>)',
+        warning: 'rgb(var(--color-warning) / <alpha-value>)',
+        muted: 'rgb(var(--color-muted) / <alpha-value>)',
+        border: 'rgb(var(--color-border) / <alpha-value>)',
+        violet: 'rgb(var(--color-violet) / <alpha-value>)',
+        bg: 'rgb(var(--color-bg) / <alpha-value>)',
+        card: 'rgb(var(--color-card) / <alpha-value>)',
+        'app-text': 'rgb(var(--color-text) / <alpha-value>)',
       },
 
       // ── Typography ──────────────────────────────────────────────────────────
       fontFamily: {
-        sans: ['Nunito', 'Poppins', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
       },
 
       // ── Border radius ───────────────────────────────────────────────────────
@@ -47,8 +33,8 @@ export default {
 
       // ── Box shadows ─────────────────────────────────────────────────────────
       boxShadow: {
-        card: '0 2px 8px 0 rgba(0,0,0,0.08)',
-        'card-hover': '0 4px 16px 0 rgba(0,0,0,0.12)',
+        card: '0 2px 8px 0 rgb(15 23 42 / 0.06)',
+        'card-hover': '0 8px 24px 0 rgb(15 23 42 / 0.10)',
       },
     },
   },

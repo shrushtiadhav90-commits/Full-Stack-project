@@ -5,6 +5,11 @@ import ChangePasswordPage from './pages/ChangePasswordPage';
 import LoginPage from './pages/LoginPage';
 import { useAuth } from './context/AuthContext';
 import { dashboardPathForRole } from './utils/authRoutes';
+import AdminLayout from './layouts/AdminLayout';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminPlaceholderPage from './pages/admin/AdminPlaceholderPage';
+import { EmptyState, PageHeader } from './components/ui';
+import { Compass, LogOut } from 'lucide-react';
 
 function HomeRedirect() {
   const { user, isLoading } = useAuth();
@@ -43,20 +48,36 @@ function Dashboard({ role }) {
   const roleLabel = role.charAt(0) + role.slice(1).toLowerCase();
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-bg px-4 py-8">
-      <section className="w-full max-w-xl rounded-2xl bg-card p-7 text-center shadow-card sm:p-10">
-        <p className="text-sm font-extrabold uppercase tracking-wide text-secondary">{roleLabel} portal</p>
-        <h1 className="mt-3 text-3xl font-extrabold text-primary">
+    <main className="page-enter flex min-h-screen items-center justify-center bg-bg px-4 py-8">
+      <section className="w-full max-w-2xl rounded-2xl border border-border bg-card p-6 shadow-card sm:p-9">
+        <div className="mb-7 flex items-center gap-3 border-b border-border pb-5">
+          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Compass aria-hidden="true" size={21} />
+          </span>
+          <div>
+            <p className="text-sm font-semibold text-primary">Nexus Quiz Portal</p>
+            <p className="text-xs font-medium text-muted">{roleLabel} workspace</p>
+          </div>
+        </div>
+        <p className="text-xs font-semibold uppercase tracking-[0.15em] text-muted">{roleLabel} portal</p>
+        <h1 className="mt-2 text-2xl font-semibold tracking-tight text-app-text sm:text-3xl">
           Welcome, {user.fullName}
         </h1>
-        <p className="mt-3 text-app-text/75">
+        <p className="mt-2 text-sm leading-relaxed text-muted sm:text-base">
           Your Nexus Quiz Portal dashboard is ready.
         </p>
+        <div className="mt-7">
+          <EmptyState
+            title="Your learning space is ready"
+            message="Updates and activities will appear here as they become available."
+          />
+        </div>
         <button
           type="button"
           onClick={() => logout().catch(() => {})}
-          className="mt-8 inline-flex min-h-12 items-center justify-center rounded-xl border border-primary/20 px-6 py-3 font-extrabold text-primary transition hover:bg-primary/10 focus-visible:outline-primary"
+          className="mt-6 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-primary/25 bg-card px-5 py-3 text-sm font-semibold text-primary transition duration-150 hover:bg-primary/5 active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
+          <LogOut aria-hidden="true" size={17} />
           Log out
         </button>
       </section>
@@ -66,16 +87,21 @@ function Dashboard({ role }) {
 
 function MessagePage({ title, description }) {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-bg px-4 py-8">
-      <section className="w-full max-w-md rounded-2xl bg-card p-8 text-center shadow-card">
-        <h1 className="text-2xl font-extrabold text-primary">{title}</h1>
-        <p className="mt-3 text-app-text/75">{description}</p>
-        <a
-          href="/"
-          className="mt-6 inline-flex min-h-11 items-center rounded-xl bg-primary px-5 py-2.5 font-extrabold text-card focus-visible:outline-primary"
-        >
-          Go to portal
-        </a>
+    <main className="page-enter flex min-h-screen items-center justify-center bg-bg px-4 py-8">
+      <section className="w-full max-w-2xl rounded-2xl border border-border bg-card p-5 shadow-card sm:p-8">
+        <PageHeader title={title} description={description} />
+        <EmptyState
+          title="Let's get you back on track"
+          message="The page may have moved, or your account may not have access to it."
+        />
+        <div className="mt-6 text-center">
+          <a
+            href="/"
+            className="inline-flex min-h-12 items-center justify-center rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-card shadow-sm transition duration-150 hover:bg-primary/90 active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            Go to portal
+          </a>
+        </div>
       </section>
     </main>
   );
@@ -121,13 +147,23 @@ export default function AppRouter() {
         )}
       />
       <Route
-        path="/admin/dashboard"
+        path="/admin"
         element={(
           <ProtectedRoute allowedRoles={['ADMIN']}>
-            <Dashboard role="ADMIN" />
+            <AdminLayout />
           </ProtectedRoute>
         )}
-      />
+      >
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="users" element={<AdminPlaceholderPage />} />
+        <Route path="classes" element={<AdminPlaceholderPage />} />
+        <Route path="subjects" element={<AdminPlaceholderPage />} />
+        <Route path="assignments" element={<AdminPlaceholderPage />} />
+        <Route path="parent-links" element={<AdminPlaceholderPage />} />
+        <Route path="settings" element={<AdminPlaceholderPage />} />
+        <Route path="audit-log" element={<AdminPlaceholderPage />} />
+      </Route>
       <Route path="*" element={<Navigate to="/404" replace />} />
     </Routes>
   );

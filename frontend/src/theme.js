@@ -13,33 +13,35 @@
  */
 
 export const defaultColors = {
-  primary:   '#2563EB', // blue  – main brand colour
-  secondary: '#F59E0B', // amber – accent colour
-  success:   '#22C55E',
-  error:     '#EF4444',
-  warning:   '#F97316',
-  bg:        '#F8FAFC',
-  card:      '#FFFFFF',
-  text:      '#1E293B',
+  primary: '#1D4ED8',
+  'primary-dark': '#0B1F4B',
+  secondary: '#F59E0B',
+  success: '#16A34A',
+  warning: '#F97316',
+  error: '#DC2626',
+  bg: '#F1F5F9',
+  card: '#FFFFFF',
+  text: '#0F172A',
+  muted: '#64748B',
+  border: '#E2E8F0',
+  violet: '#7C3AED',
 };
 
 /**
  * Convert a hex color string like '#2563EB' to an 'R, G, B' channel string
- * like '37, 99, 235' so it can be used in Tailwind's opacity-modifier syntax:
- *   rgb(var(--color-primary-rgb) / 0.5)
+ * like '29 78 216' for Tailwind's rgb(var(...) / <alpha-value>) syntax.
  */
 export function hexToRgbChannels(hex) {
   const clean = hex.replace('#', '');
   const r = parseInt(clean.substring(0, 2), 16);
   const g = parseInt(clean.substring(2, 4), 16);
   const b = parseInt(clean.substring(4, 6), 16);
-  return `${r}, ${g}, ${b}`;
+  return `${r} ${g} ${b}`;
 }
 
 /**
  * Build a CSS-variables object from a colors map.
- * Produces both the hex variable (--color-primary) and the RGB-channel
- * variable (--color-primary-rgb) for every color key.
+ * Produces the RGB channel variable for every color key.
  *
  * @param {typeof defaultColors} colors
  * @returns {Record<string, string>}
@@ -47,9 +49,7 @@ export function hexToRgbChannels(hex) {
 export function toCssVars(colors) {
   const vars = {};
   for (const [key, hex] of Object.entries(colors)) {
-    const cssKey = `--color-${key}`;
-    vars[cssKey] = hex;
-    vars[`${cssKey}-rgb`] = hexToRgbChannels(hex);
+    vars[`--color-${key}`] = hexToRgbChannels(hex);
   }
   return vars;
 }
