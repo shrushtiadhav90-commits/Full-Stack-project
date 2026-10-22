@@ -8,6 +8,7 @@ export default function Pagination({
   onPageChange,
   onSizeChange,
   pageSizes = [10, 20, 50],
+  sizeId = 'pagination-size',
 }) {
   const pageCount = Math.max(1, Math.ceil(total / size));
   const firstItem = total === 0 ? 0 : page * size + 1;
@@ -19,9 +20,9 @@ export default function Pagination({
         Showing {firstItem}–{lastItem} of {total}
       </p>
       <div className="flex items-center gap-2">
-        <label htmlFor="pagination-size" className="sr-only">Rows per page</label>
+        <label htmlFor={sizeId} className="sr-only">Rows per page</label>
         <select
-          id="pagination-size"
+          id={sizeId}
           value={size}
           onChange={(event) => onSizeChange?.(Number(event.target.value))}
           className="min-h-11 rounded-xl border border-border bg-card px-3 text-sm text-app-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"

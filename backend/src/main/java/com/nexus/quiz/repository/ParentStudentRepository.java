@@ -18,4 +18,6 @@ public interface ParentStudentRepository extends JpaRepository<ParentStudent, Lo
     boolean existsByParentIdAndStudentId(Long parentId, Long studentId);
 
     Page<ParentStudent> findAllBy(Pageable pageable);
+
+    Page<ParentStudent> findByStudentId(Long studentId, Pageable pageable);
 }

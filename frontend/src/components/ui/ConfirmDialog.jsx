@@ -13,10 +13,10 @@ export default function ConfirmDialog({
   variant = 'danger',
 }) {
   return (
-    <Modal open={open} onClose={onClose} title={title}>
+    <Modal open={open} onClose={() => { if (!loading) onClose(); }} closeOnOutsideClick={!loading} title={title}>
       <p className="text-app-text/80">{message}</p>
       <div className="mt-6 flex flex-col-reverse justify-end gap-3 sm:flex-row">
-        <Button variant="ghost" onClick={onClose}>{cancelLabel}</Button>
+        <Button variant="ghost" disabled={loading} onClick={onClose}>{cancelLabel}</Button>
         <Button variant={variant} onClick={onConfirm} loading={loading}>{confirmLabel}</Button>
       </div>
     </Modal>

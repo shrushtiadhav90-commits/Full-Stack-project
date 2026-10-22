@@ -11,7 +11,10 @@ public record UserSummaryResponse(
         Role role,
         boolean isActive,
         boolean mustChangePassword,
+        Long studentId,
         Long classId,
         String className,
-        String section) {
+        String section,
+        String rollNumber,
+        String admissionNumber) {
 }

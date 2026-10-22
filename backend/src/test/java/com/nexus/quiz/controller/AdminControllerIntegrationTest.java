@@ -4,8 +4,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nexus.quiz.entity.Role;
 import com.nexus.quiz.entity.User;
+import com.nexus.quiz.repository.AcademicYearRepository;
 import com.nexus.quiz.repository.AuditLogRepository;
+import com.nexus.quiz.repository.ParentStudentRepository;
 import com.nexus.quiz.repository.RefreshTokenRepository;
+import com.nexus.quiz.repository.SchoolClassRepository;
+import com.nexus.quiz.repository.StudentRepository;
 import com.nexus.quiz.repository.UserRepository;
 import com.nexus.quiz.security.JwtService;
 import com.nexus.quiz.util.PasswordUtil;
@@ -30,6 +34,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
@@ -52,6 +57,18 @@ class AdminControllerIntegrationTest {
     private UserRepository userRepository;
 
     @Autowired
+    private StudentRepository studentRepository;
+
+    @Autowired
+    private ParentStudentRepository parentStudentRepository;
+
+    @Autowired
+    private SchoolClassRepository schoolClassRepository;
+
+    @Autowired
+    private AcademicYearRepository academicYearRepository;
+
+    @Autowired
     private RefreshTokenRepository refreshTokenRepository;
 
     @Autowired
@@ -68,6 +85,9 @@ class AdminControllerIntegrationTest {
 
     private final Set<String> ownedUsernames = new HashSet<>();
     private final List<Long> preexistingAuditIds = new ArrayList<>();
+    private final List<Long> ownedParentLinkIds = new ArrayList<>();
+    private final List<Long> ownedClassIds = new ArrayList<>();
+    private final List<Long> ownedAcademicYearIds = new ArrayList<>();
     private User admin;
 
     @BeforeEach
@@ -86,15 +106,22 @@ class AdminControllerIntegrationTest {
         auditLogRepository.findAll().stream()
                 .filter(log -> !preexistingAuditIds.contains(log.getId()))
                 .forEach(auditLogRepository::delete);
+        ownedParentLinkIds.forEach(parentStudentRepository::deleteById);
         for (String username : ownedUsernames) {
             userRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(username, username)
                     .ifPresent(user -> {
+                        studentRepository.findByUserId(user.getId()).ifPresent(studentRepository::delete);
                         refreshTokenRepository.deleteAll(refreshTokenRepository.findAll().stream()
                                 .filter(token -> token.getUserId().equals(user.getId())).toList());
                         userRepository.delete(user);
                     });
         }
+        ownedClassIds.forEach(schoolClassRepository::deleteById);
+        ownedAcademicYearIds.forEach(academicYearRepository::deleteById);
         ownedUsernames.clear();
+        ownedParentLinkIds.clear();
+        ownedClassIds.clear();
+        ownedAcademicYearIds.clear();
         preexistingAuditIds.clear();
     }
 
@@ -127,6 +154,85 @@ class AdminControllerIntegrationTest {
         assertFalse(listBody.contains("temporaryPassword"));
         assertFalse(listBody.contains(temporaryPassword));
         assertFalse(listBody.contains("passwordHash"));
+    }
+
+    @Test
+    void studentLookupReturnsStudentIdRequiredToCreateParentLink() throws Exception {
+        String token = adminToken();
+        String yearName = "AY-" + UUID.randomUUID().toString().substring(0, 8);
+        var yearResult = mockMvc.perform(post("/api/v1/admin/academic-years")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name":"%s","startDate":"2098-06-01","endDate":"2099-04-30","current":false}
+                                """.formatted(yearName)))
+                .andExpect(status().isCreated())
+                .andReturn();
+        long academicYearId = objectMapper.readTree(yearResult.getResponse().getContentAsString())
+                .path("data").path("id").asLong();
+        ownedAcademicYearIds.add(academicYearId);
+
+        var classResult = mockMvc.perform(post("/api/v1/admin/classes")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name":"Class 1","section":"A","academicYearId":%d}
+                                """.formatted(academicYearId)))
+                .andExpect(status().isCreated())
+                .andReturn();
+        long classId = objectMapper.readTree(classResult.getResponse().getContentAsString())
+                .path("data").path("id").asLong();
+        ownedClassIds.add(classId);
+
+        String studentUsername = uniqueUsername();
+        String parentUsername = uniqueUsername();
+        ownedUsernames.add(studentUsername);
+        ownedUsernames.add(parentUsername);
+        var studentResult = mockMvc.perform(post("/api/v1/admin/users")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"fullName":"Student Lookup Test","username":"%s",
+                                 "role":"STUDENT","classId":%d}
+                                """.formatted(studentUsername, classId)))
+                .andExpect(status().isCreated())
+                .andReturn();
+        JsonNode studentUser = objectMapper.readTree(studentResult.getResponse().getContentAsString())
+                .path("data").path("user");
+        long userId = studentUser.path("id").asLong();
+        long studentId = studentUser.path("studentId").asLong();
+        assertEquals(studentRepository.findByUserId(userId).orElseThrow().getId(), studentId);
+
+        mockMvc.perform(get("/api/v1/admin/users")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                        .param("role", "STUDENT")
+                        .param("search", studentUsername)
+                        .param("size", "100"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content[0].studentId").value(studentId));
+
+        var parentResult = mockMvc.perform(post("/api/v1/admin/users")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"fullName":"Parent Lookup Test","username":"%s","role":"PARENT"}
+                                """.formatted(parentUsername)))
+                .andExpect(status().isCreated())
+                .andReturn();
+        long parentUserId = objectMapper.readTree(parentResult.getResponse().getContentAsString())
+                .path("data").path("user").path("id").asLong();
+
+        var linkResult = mockMvc.perform(post("/api/v1/admin/parent-links")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"parentUserId":%d,"studentId":%d,"relation":"GUARDIAN"}
+                                """.formatted(parentUserId, studentId)))
+                .andExpect(status().isCreated())
+                .andReturn();
+        JsonNode link = objectMapper.readTree(linkResult.getResponse().getContentAsString()).path("data");
+        ownedParentLinkIds.add(link.path("id").asLong());
+        assertEquals(studentId, link.path("studentId").asLong());
     }
 
     @Test

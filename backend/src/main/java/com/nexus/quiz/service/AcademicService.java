@@ -336,9 +336,13 @@ public class AcademicService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<ParentStudentLinkResponse> listParentStudentLinks(int page, int size, String sort) {
+    public PageResponse<ParentStudentLinkResponse> listParentStudentLinks(
+            int page, int size, String sort, Long studentId) {
         Pageable pageable = pageable(page, size, sort, Set.of("id", "createdAtUtc"));
-        return PageResponse.from(parentStudentRepository.findAllBy(pageable).map(this::toResponse));
+        var links = studentId == null
+                ? parentStudentRepository.findAllBy(pageable)
+                : parentStudentRepository.findByStudentId(studentId, pageable);
+        return PageResponse.from(links.map(this::toResponse));
     }
 
     @Transactional

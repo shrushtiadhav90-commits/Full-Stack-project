@@ -96,6 +96,10 @@ npm run dev
 
 The SPA will be available at **http://localhost:5173**.
 
+### Admin setup order
+
+Create admin records in dependency order: **academic year → class → subject → faculty user → student user (with a class) → faculty assignment → parent user → parent link**. Users are created from **Admin → Users**; classes and academic years are managed under **Admin → Classes**.
+
 ---
 
 ## Swagger UI

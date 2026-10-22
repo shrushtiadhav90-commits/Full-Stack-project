@@ -139,6 +139,7 @@ public class UserBatchImportService {
     }
 
     private UserSummaryResponse toSummary(User user, SchoolClass schoolClass) {
+        Student student = studentRepository.findByUserId(user.getId()).orElse(null);
         return new UserSummaryResponse(
                 user.getId(),
                 user.getFullName(),
@@ -148,9 +149,12 @@ public class UserBatchImportService {
                 user.getRole(),
                 Boolean.TRUE.equals(user.getIsActive()),
                 Boolean.TRUE.equals(user.getMustChangePassword()),
+                student == null ? null : student.getId(),
                 schoolClass == null ? null : schoolClass.getId(),
                 schoolClass == null ? null : schoolClass.getName(),
-                schoolClass == null ? null : schoolClass.getSection());
+                schoolClass == null ? null : schoolClass.getSection(),
+                student == null ? null : student.getRollNumber(),
+                student == null ? null : student.getAdmissionNumber());
     }
 
     private String normalizeOptional(String value) {

@@ -447,6 +447,7 @@ public class UserService {
     }
 
     private UserSummaryResponse toSummary(User user, SchoolClass schoolClass) {
+        Student student = studentRepository.findByUserId(user.getId()).orElse(null);
         return new UserSummaryResponse(
                 user.getId(),
                 user.getFullName(),
@@ -456,9 +457,12 @@ public class UserService {
                 user.getRole(),
                 Boolean.TRUE.equals(user.getIsActive()),
                 Boolean.TRUE.equals(user.getMustChangePassword()),
+                student == null ? null : student.getId(),
                 schoolClass == null ? null : schoolClass.getId(),
                 schoolClass == null ? null : schoolClass.getName(),
-                schoolClass == null ? null : schoolClass.getSection());
+                schoolClass == null ? null : schoolClass.getSection(),
+                student == null ? null : student.getRollNumber(),
+                student == null ? null : student.getAdmissionNumber());
     }
 
     private Map<String, Object> userAuditValue(User user, SchoolClass schoolClass) {

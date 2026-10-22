@@ -21,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -70,6 +71,21 @@ class AcademicServiceTest {
                 1L,
                 new ParentStudentLinkRequest(10L, 20L,
                         com.nexus.quiz.entity.ParentStudent.Relation.GUARDIAN)));
+    }
+
+    @Test
+    void listsParentLinksFilteredByStudentUsingPagination() {
+        when(parentStudentRepository.findByStudentId(
+                org.mockito.ArgumentMatchers.eq(20L),
+                org.mockito.ArgumentMatchers.any()))
+                .thenReturn(org.springframework.data.domain.Page.empty());
+
+        var result = academicService.listParentStudentLinks(0, 20, "id,asc", 20L);
+
+        assertEquals(0, result.totalElements());
+        verify(parentStudentRepository).findByStudentId(
+                org.mockito.ArgumentMatchers.eq(20L),
+                org.mockito.ArgumentMatchers.any());
     }
 
     @Test

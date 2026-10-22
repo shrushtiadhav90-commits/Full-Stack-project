@@ -243,9 +243,10 @@ public class AdminController {
     @GetMapping("/parent-links")
     public ResponseEntity<ApiResponse<PageResponse<ParentStudentLinkResponse>>> listParentLinks(
             @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "id,asc") String sort) {
+            @RequestParam(defaultValue = "id,asc") String sort,
+            @RequestParam(required = false) Long studentId) {
         return ResponseEntity.ok(ApiResponse.success("Parent-student links",
-                academicService.listParentStudentLinks(page, size, sort)));
+                academicService.listParentStudentLinks(page, size, sort, studentId)));
     }
 
     @DeleteMapping("/parent-links/{id}")

@@ -1,14 +1,14 @@
-import { useId } from 'react';
+import { forwardRef, useId } from 'react';
 
-export default function Toggle({
+const Toggle = forwardRef(function Toggle({
   id: providedId,
   label,
   description,
-  checked = false,
-  onChange,
+  checked,
+  defaultChecked,
   disabled = false,
-  name,
-}) {
+  ...props
+}, ref) {
   const generatedId = useId();
   const id = providedId ?? generatedId;
 
@@ -18,18 +18,25 @@ export default function Toggle({
         <label htmlFor={id} className="block font-bold text-app-text">{label}</label>
         {description && <p className="mt-1 text-sm text-app-text/75">{description}</p>}
       </div>
-      <button
-        id={id}
-        type="button"
-        name={name}
-        role="switch"
-        aria-checked={checked}
-        disabled={disabled}
-        onClick={() => onChange?.(!checked)}
-        className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full p-1 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60 ${checked ? 'bg-primary' : 'bg-app-text/30'}`}
-      >
-        <span className={`h-5 w-5 rounded-full bg-card shadow transition-transform ${checked ? 'translate-x-5' : 'translate-x-0'}`} />
-      </button>
+      <span className="relative inline-flex h-7 w-12 shrink-0 items-center rounded-full">
+        <input
+          {...props}
+          ref={ref}
+          id={id}
+          type="checkbox"
+          role="switch"
+          checked={checked}
+          defaultChecked={defaultChecked}
+          disabled={disabled}
+          className="peer absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
+        />
+        <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-full bg-app-text/30 p-1 transition peer-checked:bg-primary peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary peer-disabled:opacity-60" />
+        <span aria-hidden="true" className="pointer-events-none relative ml-1 h-5 w-5 rounded-full bg-card shadow transition-transform peer-checked:translate-x-5" />
+      </span>
     </div>
   );
-}
+});
+
+Toggle.displayName = 'Toggle';
+
+export default Toggle;

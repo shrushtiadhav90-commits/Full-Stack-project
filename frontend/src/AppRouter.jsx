@@ -8,6 +8,10 @@ import { dashboardPathForRole } from './utils/authRoutes';
 import AdminLayout from './layouts/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminPlaceholderPage from './pages/admin/AdminPlaceholderPage';
+import UsersPage from './pages/admin/UsersPage';
+import { ClassesPage, SubjectsPage } from './pages/admin/AcademicStructurePages';
+import FacultyAssignmentsPage from './pages/admin/FacultyAssignmentsPage';
+import ParentLinksPage from './pages/admin/ParentLinksPage';
 import { EmptyState, PageHeader } from './components/ui';
 import { Compass, LogOut } from 'lucide-react';
 
@@ -156,11 +160,11 @@ export default function AppRouter() {
       >
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<AdminDashboard />} />
-        <Route path="users" element={<AdminPlaceholderPage />} />
-        <Route path="classes" element={<AdminPlaceholderPage />} />
-        <Route path="subjects" element={<AdminPlaceholderPage />} />
-        <Route path="assignments" element={<AdminPlaceholderPage />} />
-        <Route path="parent-links" element={<AdminPlaceholderPage />} />
+        <Route path="users" element={<UsersPage />} />
+        <Route path="classes" element={<ClassesPage />} />
+        <Route path="subjects" element={<SubjectsPage />} />
+        <Route path="assignments" element={<FacultyAssignmentsPage />} />
+        <Route path="parent-links" element={<ParentLinksPage />} />
         <Route path="settings" element={<AdminPlaceholderPage />} />
         <Route path="audit-log" element={<AdminPlaceholderPage />} />
       </Route>
