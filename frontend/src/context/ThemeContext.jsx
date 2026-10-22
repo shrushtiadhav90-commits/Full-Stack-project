@@ -7,11 +7,10 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { defaultColors, toCssVars } from '../theme';
+import { defaultColors, defaultSchoolName, toCssVars } from '../theme';
 
 const ThemeContext = createContext(null);
 const CACHE_KEY = 'nexus-quiz-theme';
-const DEFAULT_SCHOOL_NAME = 'Nexus Ranaji English Medium School';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const validHex = /^#[\da-f]{6}$/i;
 
@@ -19,7 +18,7 @@ function normalizeTheme(value = {}) {
   return {
     schoolName: typeof value.schoolName === 'string' && value.schoolName.trim()
       ? value.schoolName
-      : DEFAULT_SCHOOL_NAME,
+      : defaultSchoolName,
     logoUrl: typeof value.logoUrl === 'string' && value.logoUrl
       ? value.logoUrl
       : null,
@@ -50,6 +49,15 @@ function applyTheme(theme) {
   });
 }
 
+function cacheTheme(theme) {
+  window.localStorage.setItem(CACHE_KEY, JSON.stringify({
+    schoolName: theme.schoolName,
+    logoUrl: theme.logoUrl,
+    primaryColor: theme.colors.primary,
+    secondaryColor: theme.colors.secondary,
+  }));
+}
+
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
     const initialTheme = readCachedTheme();
@@ -66,15 +74,19 @@ export function ThemeProvider({ children }) {
       const nextTheme = normalizeTheme(response.data?.data ?? {});
       setTheme(nextTheme);
       applyTheme(nextTheme);
-      window.localStorage.setItem(CACHE_KEY, JSON.stringify({
-        schoolName: nextTheme.schoolName,
-        logoUrl: nextTheme.logoUrl,
-        primaryColor: nextTheme.colors.primary,
-        secondaryColor: nextTheme.colors.secondary,
-      }));
+      cacheTheme(nextTheme);
+      return nextTheme;
     } catch {
-      // Keep the defaults or cached brand values when the public endpoint is unavailable.
+      return null;
     }
+  }, []);
+
+  const updateTheme = useCallback((settings) => {
+    const nextTheme = normalizeTheme(settings);
+    setTheme(nextTheme);
+    applyTheme(nextTheme);
+    cacheTheme(nextTheme);
+    return nextTheme;
   }, []);
 
   useEffect(() => {
@@ -89,7 +101,8 @@ export function ThemeProvider({ children }) {
       secondary: theme.colors.secondary,
     },
     refreshTheme,
-  }), [theme, refreshTheme]);
+    updateTheme,
+  }), [theme, refreshTheme, updateTheme]);
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }

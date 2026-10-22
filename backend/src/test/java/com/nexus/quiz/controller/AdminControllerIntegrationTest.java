@@ -266,6 +266,15 @@ class AdminControllerIntegrationTest {
     }
 
     @Test
+    void adminSettingsDefaultsOptionalFeaturesToDisabled() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/settings")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.leaderboardEnabled").value(false))
+                .andExpect(jsonPath("$.data.emailNotificationsEnabled").value(false));
+    }
+
+    @Test
     void invalidColorAndOversizedLogoAreRejected() throws Exception {
         mockMvc.perform(put("/api/v1/admin/settings")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken())
@@ -320,6 +329,7 @@ class AdminControllerIntegrationTest {
                         .param("actionType", "USER_CREATED"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.content[0].actionType").value("USER_CREATED"))
+                .andExpect(jsonPath("$.data.content[0].adminName").isNotEmpty())
                 .andExpect(jsonPath("$.data.content[0].createdAt").exists());
     }
 

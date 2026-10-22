@@ -88,7 +88,7 @@ public class SettingsService {
                 .schoolName("Nexus Ranaji English Medium School")
                 .primaryColor("#2563EB")
                 .secondaryColor("#F59E0B")
-                .leaderboardEnabled(true)
+                .leaderboardEnabled(false)
                 .emailNotificationsEnabled(false)
                 .build();
     }

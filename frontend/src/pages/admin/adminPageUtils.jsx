@@ -64,4 +64,13 @@ export function csvCell(value) {
   return `"${String(value ?? '').replaceAll('"', '""')}"`;
 }
 
+export function resolveLogoUrl(logoUrl) {
+  if (!logoUrl || /^https?:\/\//i.test(logoUrl)) return logoUrl;
+  try {
+    return `${new URL(import.meta.env.VITE_API_BASE_URL).origin}${logoUrl}`;
+  } catch {
+    return logoUrl;
+  }
+}
+
 export { axiosInstance };

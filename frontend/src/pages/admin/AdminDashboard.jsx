@@ -8,8 +8,16 @@ import {
   Users,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Card, EmptyState } from '../../components/ui';
+import { useTheme } from '../../context/ThemeContext';
+import { Card, EmptyState, ErrorState, Skeleton } from '../../components/ui';
+import { loadPage } from './adminPageUtils';
+import {
+  auditActionClasses,
+  auditActionLabel,
+  formatAuditTimestamp,
+} from './adminAuditUtils';
 
 const summaryCards = [
   { label: 'Students', icon: GraduationCap, to: '/admin/users', color: 'bg-primary/10 text-primary' },
@@ -56,12 +64,108 @@ function BookIllustration() {
   );
 }
 
+function StatCard({ stat }) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (stat.value == null) return undefined;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      setCount(stat.value);
+      return undefined;
+    }
+    let frame;
+    let start;
+    const duration = 850;
+    const animate = (timestamp) => {
+      if (start === undefined) start = timestamp;
+      const progress = Math.min((timestamp - start) / duration, 1);
+      setCount(Math.round(stat.value * (1 - ((1 - progress) ** 3))));
+      if (progress < 1) frame = window.requestAnimationFrame(animate);
+    };
+    frame = window.requestAnimationFrame(animate);
+    return () => window.cancelAnimationFrame(frame);
+  }, [stat.value]);
+
+  const { label, icon: Icon, to, color } = stat;
+  return (
+    <Link to={to} className="group rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+      <Card className="min-h-40 transition duration-150 group-hover:-translate-y-1 group-hover:shadow-card-hover">
+        <div className="flex items-start justify-between gap-3">
+          <span className={`flex h-11 w-11 items-center justify-center rounded-xl ${color}`}>
+            <Icon aria-hidden="true" size={21} />
+          </span>
+          <Sparkline />
+        </div>
+        <p className="mt-4 text-3xl font-bold tracking-tight text-app-text" aria-live="polite">
+          {stat.value == null ? '—' : count.toLocaleString('en-IN')}
+        </p>
+        <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm font-medium text-muted">{label}</p>
+          <p className="text-xs font-medium text-muted">Total</p>
+        </div>
+      </Card>
+    </Link>
+  );
+}
+
 export default function AdminDashboard() {
   const { user } = useAuth();
+  const { schoolName } = useTheme();
+  const [stats, setStats] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState('');
+  const [statsRetryKey, setStatsRetryKey] = useState(0);
+  const [activity, setActivity] = useState([]);
+  const [activityLoading, setActivityLoading] = useState(true);
+  const [activityError, setActivityError] = useState('');
+  const [activityRetryKey, setActivityRetryKey] = useState(0);
   const today = new Intl.DateTimeFormat('en-IN', {
     dateStyle: 'full',
     timeZone: 'Asia/Kolkata',
   }).format(new Date());
+
+  useEffect(() => {
+    let active = true;
+    setStatsLoading(true);
+    setStatsError('');
+    Promise.all([
+      loadPage('/admin/users', { page: 0, size: 1, role: 'STUDENT' }),
+      loadPage('/admin/users', { page: 0, size: 1, role: 'FACULTY' }),
+      loadPage('/admin/classes', { page: 0, size: 1 }),
+      loadPage('/admin/subjects', { page: 0, size: 1 }),
+    ])
+      .then(([students, faculty, classes, subjects]) => {
+        if (active) setStats({
+          students: students.totalElements,
+          faculty: faculty.totalElements,
+          classes: classes.totalElements,
+          subjects: subjects.totalElements,
+        });
+      })
+      .catch((error) => {
+        if (active) setStatsError(error.response?.data?.message || error.message || 'Could not load school totals.');
+      })
+      .finally(() => {
+        if (active) setStatsLoading(false);
+      });
+    return () => { active = false; };
+  }, [statsRetryKey]);
+
+  useEffect(() => {
+    let active = true;
+    setActivityLoading(true);
+    setActivityError('');
+    loadPage('/admin/audit-log', { page: 0, size: 5 })
+      .then((result) => {
+        if (active) setActivity(result.items);
+      })
+      .catch((error) => {
+        if (active) setActivityError(error.response?.data?.message || error.message || 'Could not load recent activity.');
+      })
+      .finally(() => {
+        if (active) setActivityLoading(false);
+      });
+    return () => { active = false; };
+  }, [activityRetryKey]);
 
   return (
     <div className="page-enter space-y-7">
@@ -100,25 +204,19 @@ export default function AdminDashboard() {
           <h2 className="text-lg font-semibold text-app-text">Institute overview</h2>
           <span className="text-xs font-medium text-muted">Updated just now</span>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {summaryCards.map(({ label, icon: Icon, to, color }) => (
-            <Link key={label} to={to} className="group rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
-              <Card className="min-h-40 transition duration-150 group-hover:-translate-y-1 group-hover:shadow-card-hover">
-                <div className="flex items-start justify-between gap-3">
-                  <span className={`flex h-11 w-11 items-center justify-center rounded-xl ${color}`}>
-                    <Icon aria-hidden="true" size={21} />
-                  </span>
-                  <Sparkline />
-                </div>
-                <p className="mt-4 text-3xl font-bold tracking-tight text-app-text">--</p>
-                <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-sm font-medium text-muted">{label}</p>
-                  <p className="text-xs font-medium text-muted">+0 this month</p>
-                </div>
-              </Card>
-            </Link>
-          ))}
-        </div>
+        {statsError ? (
+          <ErrorState message={statsError} onRetry={() => setStatsRetryKey((key) => key + 1)} />
+        ) : statsLoading ? (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Loading school totals">
+            {[...Array(4)].map((_, index) => <Skeleton key={index} className="h-40" />)}
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {summaryCards.map((stat) => (
+              <StatCard key={stat.label} stat={{ ...stat, value: stats[stat.label.toLowerCase()] }} />
+            ))}
+          </div>
+        )}
       </section>
 
       <section aria-labelledby="quick-actions-title">
@@ -150,10 +248,43 @@ export default function AdminDashboard() {
               <ClipboardList aria-hidden="true" size={19} />
             </span>
           </div>
-          <EmptyState
-            title="No recent activity"
-            message="Administrative updates will appear here as your portal gets busy."
-          />
+          {activityLoading ? (
+            <div className="space-y-3" aria-label="Loading recent activity">
+              {[...Array(5)].map((_, index) => <Skeleton key={index} className="h-12 w-full" />)}
+            </div>
+          ) : activityError ? (
+            <ErrorState message={activityError} onRetry={() => setActivityRetryKey((key) => key + 1)} />
+          ) : activity.length === 0 ? (
+            <EmptyState
+              title="No recent activity"
+              message="Administrative updates will appear here as your portal gets busy."
+            />
+          ) : (
+            <ol className="divide-y divide-border">
+              {activity.map((entry) => (
+                <li key={entry.id} className="flex flex-col gap-2 py-3 first:pt-0 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-app-text">
+                      {entry.targetEntityType || 'Portal activity'}
+                      {entry.targetEntityId != null ? ` #${entry.targetEntityId}` : ''}
+                    </p>
+                    <p className="mt-1 truncate text-xs text-muted">
+                      {entry.adminName || `Admin #${entry.adminUserId}`}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center justify-between gap-3 sm:justify-end">
+                    <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${auditActionClasses(entry.actionType)}`}>
+                      {auditActionLabel(entry.actionType)}
+                    </span>
+                    <time className="text-xs text-muted" dateTime={entry.createdAt}>{formatAuditTimestamp(entry.createdAt)}</time>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          )}
+          <Link to="/admin/audit-log" className="mt-4 inline-flex min-h-11 items-center text-sm font-bold text-primary hover:underline">
+            View audit log <ArrowRight aria-hidden="true" size={16} className="ml-1" />
+          </Link>
         </Card>
 
         <Card className="min-h-72">
@@ -191,7 +322,7 @@ export default function AdminDashboard() {
       </section>
 
       <footer className="border-t border-border pt-4 text-center text-xs text-muted">
-        Nexus Ranaji English Medium School - Quiz Portal
+        {schoolName} - Quiz Portal
       </footer>
     </div>
   );

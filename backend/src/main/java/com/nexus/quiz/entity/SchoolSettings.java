@@ -35,7 +35,7 @@ public class SchoolSettings {
 
     @Column(name = "leaderboard_enabled", nullable = false)
     @Builder.Default
-    private Boolean leaderboardEnabled = true;
+    private Boolean leaderboardEnabled = false;
 
     @Column(name = "email_notifications_enabled", nullable = false)
     @Builder.Default

@@ -1,20 +1,34 @@
 import { NavLink } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { adminNavigation } from './adminNavigation';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { LogOut } from 'lucide-react';
+import { resolveLogoUrl } from '../../pages/admin/adminPageUtils';
 
 export default function Sidebar({ onNavigate, mobile = false }) {
-  const { schoolName } = useTheme();
+  const { schoolName, logoUrl } = useTheme();
   const { user, logout } = useAuth();
+  const [logoFailed, setLogoFailed] = useState(false);
   const sections = [...new Set(adminNavigation.map(({ section }) => section))];
+
+  useEffect(() => setLogoFailed(false), [logoUrl]);
 
   return (
     <div className="flex min-h-full flex-col text-card">
       <div className="mb-9 flex items-center gap-3 px-2">
-        <span aria-hidden="true" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-card/15 text-xl font-black ring-1 ring-card/25">
-          {schoolName.trim().charAt(0).toUpperCase()}
-        </span>
+        {logoUrl && !logoFailed ? (
+          <img
+            src={resolveLogoUrl(logoUrl)}
+            alt=""
+            onError={() => setLogoFailed(true)}
+            className="h-12 w-12 shrink-0 rounded-2xl bg-card/15 object-contain p-1 ring-1 ring-card/25"
+          />
+        ) : (
+          <span aria-hidden="true" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-card/15 text-xl font-black ring-1 ring-card/25">
+            {schoolName.trim().charAt(0).toUpperCase()}
+          </span>
+        )}
         <div className="min-w-0">
           <p className="truncate text-sm font-extrabold leading-tight">{schoolName}</p>
           <p className="mt-1 text-xs font-bold text-card/75">School administration</p>

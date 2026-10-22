@@ -13,7 +13,7 @@
  */
 
 export const defaultColors = {
-  primary: '#1D4ED8',
+  primary: '#2563EB',
   'primary-dark': '#0B1F4B',
   secondary: '#F59E0B',
   success: '#16A34A',
@@ -26,6 +26,8 @@ export const defaultColors = {
   border: '#E2E8F0',
   violet: '#7C3AED',
 };
+
+export const defaultSchoolName = 'Nexus Ranaji English Medium School';
 
 /**
  * Convert a hex color string like '#2563EB' to an 'R, G, B' channel string

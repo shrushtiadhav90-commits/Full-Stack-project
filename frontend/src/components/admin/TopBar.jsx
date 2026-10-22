@@ -1,10 +1,11 @@
 import { Bell, Menu, Search } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import Breadcrumbs from '../ui/Breadcrumbs';
 import Button from '../ui/Button';
+import { resolveLogoUrl } from '../../pages/admin/adminPageUtils';
 
 const PAGE_TITLES = {
   '/admin/dashboard': 'Dashboard',
@@ -17,21 +18,14 @@ const PAGE_TITLES = {
   '/admin/audit-log': 'Audit Log',
 };
 
-function resolveLogoUrl(logoUrl) {
-  if (!logoUrl || /^https?:\/\//i.test(logoUrl)) return logoUrl;
-  try {
-    return `${new URL(import.meta.env.VITE_API_BASE_URL).origin}${logoUrl}`;
-  } catch {
-    return logoUrl;
-  }
-}
-
 export default function TopBar({ onOpenNavigation }) {
   const { user, logout } = useAuth();
   const { schoolName, logoUrl } = useTheme();
   const { pathname } = useLocation();
   const [profileOpen, setProfileOpen] = useState(false);
   const [logoFailed, setLogoFailed] = useState(false);
+
+  useEffect(() => setLogoFailed(false), [logoUrl]);
 
   return (
     <header className="sticky top-0 z-30 flex min-h-20 items-center justify-between gap-3 border-b border-border bg-card px-4 py-3 shadow-sm sm:px-6">

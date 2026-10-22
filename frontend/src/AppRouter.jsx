@@ -7,7 +7,8 @@ import { useAuth } from './context/AuthContext';
 import { dashboardPathForRole } from './utils/authRoutes';
 import AdminLayout from './layouts/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminPlaceholderPage from './pages/admin/AdminPlaceholderPage';
+import SchoolSettingsPage from './pages/admin/SchoolSettingsPage';
+import AuditLogPage from './pages/admin/AuditLogPage';
 import UsersPage from './pages/admin/UsersPage';
 import { ClassesPage, SubjectsPage } from './pages/admin/AcademicStructurePages';
 import FacultyAssignmentsPage from './pages/admin/FacultyAssignmentsPage';
@@ -165,8 +166,8 @@ export default function AppRouter() {
         <Route path="subjects" element={<SubjectsPage />} />
         <Route path="assignments" element={<FacultyAssignmentsPage />} />
         <Route path="parent-links" element={<ParentLinksPage />} />
-        <Route path="settings" element={<AdminPlaceholderPage />} />
-        <Route path="audit-log" element={<AdminPlaceholderPage />} />
+        <Route path="settings" element={<SchoolSettingsPage />} />
+        <Route path="audit-log" element={<AuditLogPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/404" replace />} />
     </Routes>

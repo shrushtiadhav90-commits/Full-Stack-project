@@ -4,7 +4,7 @@
 
 /* RGB channels keep Tailwind opacity modifiers compatible with runtime branding. */
 :root {
-  --color-primary: 29 78 216;
+  --color-primary: 37 99 235;
   --color-primary-dark: 11 31 75;
   --color-secondary: 245 158 11;
   --color-success: 22 163 74;

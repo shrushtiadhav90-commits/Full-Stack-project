@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Activity,
   Eye,
@@ -13,8 +13,10 @@ import {
 import { useForm } from 'react-hook-form';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import LoadingScreen from '../components/common/LoadingScreen';
 import { dashboardPathForRole } from '../utils/authRoutes';
+import { resolveLogoUrl } from './admin/adminPageUtils';
 
 function getErrorMessage(error) {
   return error.response?.data?.message || 'Unable to sign in. Please try again.';
@@ -22,17 +24,21 @@ function getErrorMessage(error) {
 
 export default function LoginPage() {
   const { login, user, isLoading } = useAuth();
+  const { schoolName, logoUrl } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [logoFailed, setLogoFailed] = useState(false);
   const sessionExpired = Boolean(location.state?.sessionExpired);
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm({ mode: 'onTouched' });
+
+  useEffect(() => setLogoFailed(false), [logoUrl]);
 
   if (isLoading) {
     return <LoadingScreen />;
@@ -66,12 +72,21 @@ export default function LoginPage() {
     <main className="min-h-screen bg-bg lg:grid lg:grid-cols-2">
       <aside className="relative hidden min-h-screen overflow-hidden bg-gradient-to-br from-primary-dark via-primary-dark to-primary px-10 py-12 text-card lg:flex lg:flex-col lg:justify-between xl:px-16">
         <div className="relative z-10 flex items-center gap-4">
-          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-card/10 text-2xl font-black ring-1 ring-card/20">
-            N
-          </span>
+          {logoUrl && !logoFailed ? (
+            <img
+              src={resolveLogoUrl(logoUrl)}
+              alt=""
+              onError={() => setLogoFailed(true)}
+              className="h-14 w-14 rounded-2xl bg-card/10 object-contain p-1 ring-1 ring-card/20"
+            />
+          ) : (
+            <span aria-hidden="true" className="flex h-14 w-14 items-center justify-center rounded-2xl bg-card/10 text-2xl font-black ring-1 ring-card/20">
+              {schoolName.trim().charAt(0).toUpperCase()}
+            </span>
+          )}
           <div>
             <p className="text-xl font-black">Nexus Quiz Portal</p>
-            <p className="mt-1 text-sm font-medium text-card/75">Nexus Ranaji English Medium School</p>
+            <p className="mt-1 text-sm font-medium text-card/75">{schoolName}</p>
           </div>
         </div>
 
@@ -124,7 +139,7 @@ export default function LoginPage() {
               <div>
                 <p className="text-xl font-black sm:text-2xl lg:text-3xl lg:text-primary">Nexus Quiz Portal</p>
                 <p className="mt-1 text-sm font-medium text-card/80 lg:text-muted">
-                  Nexus Ranaji English Medium School
+                  {schoolName}
                 </p>
                 <p className="mt-3 text-base font-extrabold sm:text-lg lg:mt-5 lg:text-app-text">Welcome back</p>
                 <p className="mt-1 text-sm font-medium text-card/80 lg:text-muted">Sign in to your account</p>
