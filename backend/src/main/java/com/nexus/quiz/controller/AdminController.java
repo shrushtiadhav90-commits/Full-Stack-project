@@ -106,8 +106,11 @@ public class AdminController {
             @AuthenticationPrincipal Long adminUserId,
             @RequestPart("file") MultipartFile file,
             @RequestParam Role role) throws java.io.IOException {
-        return ResponseEntity.ok(ApiResponse.success(
-                "Bulk upload processed", userService.bulkUploadUsers(adminUserId, file, role)));
+        BulkUserResponse result = userService.bulkUploadUsers(adminUserId, file, role);
+        int status = result.successCount() > 0 && result.failureCount() > 0
+                ? 207
+                : 200;
+        return ResponseEntity.status(status).body(ApiResponse.success("Bulk upload processed", result));
     }
 
     @GetMapping("/users/template/{role}")
@@ -296,7 +299,7 @@ public class AdminController {
         } catch (java.time.format.DateTimeParseException ignored) {
             try {
                 LocalDate date = LocalDate.parse(value);
-                return (endOfDay ? date.plusDays(1).atStartOfDay(IST).toInstant().minusNanos(1)
+                return (endOfDay ? date.plusDays(1).atStartOfDay(IST).toInstant().minusNanos(1_000)
                         : date.atStartOfDay(IST).toInstant());
             } catch (java.time.format.DateTimeParseException exception) {
                 throw new IllegalArgumentException("Audit dates must be ISO date or date-time values");

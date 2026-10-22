@@ -48,6 +48,27 @@ class LocalFileStorageServiceTest {
     }
 
     @Test
+    void acceptsAndStoresValidWebp() throws IOException {
+        byte[] webp = java.util.Base64.getDecoder().decode(
+                "UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEAAUAmJaQAA3AA/v89WAAAAA==");
+
+        String storedName = storageService.store(
+                new MockMultipartFile("file", "tiny.webp", "image/webp", webp),
+                "logos");
+
+        assertTrue(storedName.endsWith(".webp"));
+        assertTrue(storageService.load("logos", storedName).exists());
+    }
+
+    @Test
+    void rejectsGifForLogoStorage() {
+        byte[] gifHeader = "GIF89a".getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+        MockMultipartFile gif = new MockMultipartFile("file", "logo.gif", "image/gif", gifHeader);
+
+        assertThrows(IllegalArgumentException.class, () -> storageService.store(gif, "logos"));
+    }
+
+    @Test
     void rejectsTextFileRenamedToPng() {
         MockMultipartFile textNamedPng = new MockMultipartFile(
                 "file", "notes.png", "image/png", "this is plain text".getBytes());

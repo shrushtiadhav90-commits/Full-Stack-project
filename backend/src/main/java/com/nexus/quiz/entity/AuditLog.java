@@ -18,7 +18,8 @@ import java.util.regex.Pattern;
 public class AuditLog {
 
     private static final Pattern PASSWORD_FIELD =
-            Pattern.compile("\"[^\"\\\\]*password[^\"\\\\]*\"\\s*:", Pattern.CASE_INSENSITIVE);
+            Pattern.compile("\"(?!mustChangePassword\")[^\"\\\\]*password[^\"\\\\]*\"\\s*:",
+                    Pattern.CASE_INSENSITIVE);
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -2,6 +2,7 @@ package com.nexus.quiz.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nexus.quiz.entity.AuditLog;
 import com.nexus.quiz.entity.Role;
 import com.nexus.quiz.entity.User;
 import com.nexus.quiz.repository.AcademicYearRepository;
@@ -27,6 +28,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -261,8 +263,9 @@ class AdminControllerIntegrationTest {
         assertTrue(data.has("logoUrl"));
         assertTrue(data.has("primaryColor"));
         assertTrue(data.has("secondaryColor"));
-        assertFalse(data.has("emailNotificationsEnabled"));
-        assertFalse(data.has("leaderboardEnabled"));
+        Set<String> fields = new HashSet<>();
+        data.fieldNames().forEachRemaining(fields::add);
+        assertEquals(Set.of("schoolName", "logoUrl", "primaryColor", "secondaryColor"), fields);
     }
 
     @Test
@@ -305,8 +308,117 @@ class AdminControllerIntegrationTest {
     }
 
     @Test
+    void schoolNameMustBeBetweenOneAndOneHundredFiftyCharacters() throws Exception {
+        String authorization = "Bearer " + adminToken();
+        for (String schoolName : List.of("", "x".repeat(151))) {
+            mockMvc.perform(put("/api/v1/admin/settings")
+                            .header(HttpHeaders.AUTHORIZATION, authorization)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(java.util.Map.of(
+                                    "schoolName", schoolName,
+                                    "primaryColor", "#112233",
+                                    "secondaryColor", "#445566",
+                                    "leaderboardEnabled", false,
+                                    "emailNotificationsEnabled", false))))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.errors.fieldErrors.schoolName").exists());
+        }
+    }
+
+    @Test
     void pathTraversalFilenameIsRejected() throws Exception {
-        mockMvc.perform(get("/api/v1/files/logo/{filename}", "invalid..name.png"))
+        for (String filename : List.of(
+                "../outside.png",
+                "..\\outside.png",
+                "%2e%2e%2foutside.png",
+                "%2e%2e%5coutside.png",
+                "..%00outside.png")) {
+            int status = mockMvc.perform(get("/api/v1/files/logo/{filename}", filename))
+                    .andReturn().getResponse().getStatus();
+            assertTrue(status == 400 || status == 404,
+                    "Traversal candidate must be rejected or not found: " + filename);
+        }
+
+        mockMvc.perform(get("/api/v1/files/profile-photos/{filename}", "missing.png"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.data").doesNotExist());
+
+        mockMvc.perform(get("/api/v1/files/logo/{filename}", "missing-public-logo.png"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    void bulkUploadContinuesAfterInvalidRowsAndReturnsPasswordsOnce() throws Exception {
+        String username = uniqueUsername();
+        ownedUsernames.add(username);
+        String csv = "fullName,username,email,phone\n"
+                + ",bad-row,bad-row@example.test,123\n"
+                + "Bulk User," + username + "," + username + "@example.test,456\n";
+        var partialResult = mockMvc.perform(multipart("/api/v1/admin/users/bulk-upload")
+                        .file(new MockMultipartFile(
+                                "file", "users.csv", "text/csv",
+                                csv.getBytes(java.nio.charset.StandardCharsets.UTF_8)))
+                        .param("role", "PARENT")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken()))
+                .andExpect(status().is(207))
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.successCount").value(1))
+                .andExpect(jsonPath("$.data.failureCount").value(1))
+                .andExpect(jsonPath("$.data.failures[0].rowNumber").value(2))
+                .andExpect(jsonPath("$.data.failures[0].reason").isNotEmpty())
+                .andReturn();
+        String partialBody = partialResult.getResponse().getContentAsString();
+        JsonNode partialJson = objectMapper.readTree(partialBody);
+        assertEquals(1, countNamedField(partialJson, "temporaryPassword"));
+        String password = partialJson.path("data").path("createdUsers").get(0)
+                .path("temporaryPassword").asText();
+        assertFalse(password.isBlank());
+        User saved = userRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(
+                username, username).orElseThrow();
+        assertTrue(PasswordUtil.verify(password, saved.getPasswordHash()));
+
+        String allSuccessUsername = uniqueUsername();
+        ownedUsernames.add(allSuccessUsername);
+        String allSuccessCsv = "fullName,username,email,phone\n"
+                + "Another Bulk User," + allSuccessUsername + ","
+                + allSuccessUsername + "@example.test,789\n";
+        var allSuccess = mockMvc.perform(multipart("/api/v1/admin/users/bulk-upload")
+                        .file(new MockMultipartFile(
+                                "file", "users.csv", "text/csv",
+                                allSuccessCsv.getBytes(java.nio.charset.StandardCharsets.UTF_8)))
+                        .param("role", "PARENT")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.successCount").value(1))
+                .andExpect(jsonPath("$.data.failureCount").value(0))
+                .andReturn();
+        assertEquals(1, countNamedField(
+                objectMapper.readTree(allSuccess.getResponse().getContentAsString()),
+                "temporaryPassword"));
+    }
+
+    @Test
+    void bulkUploadRejectsOversizedAndNonCsvFiles() throws Exception {
+        byte[] oversizedCsv = new byte[5 * 1024 * 1024 + 1];
+        byte[] csvHeader = "fullName,username,email,phone\n".getBytes(
+                java.nio.charset.StandardCharsets.UTF_8);
+        System.arraycopy(csvHeader, 0, oversizedCsv, 0, csvHeader.length);
+        mockMvc.perform(multipart("/api/v1/admin/users/bulk-upload")
+                        .file(new MockMultipartFile("file", "users.csv", "text/csv", oversizedCsv))
+                        .param("role", "PARENT")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
+
+        mockMvc.perform(multipart("/api/v1/admin/users/bulk-upload")
+                        .file(new MockMultipartFile(
+                                "file", "users.csv", "text/csv",
+                                new byte[]{(byte) 0x89, 'P', 'N', 'G'}))
+                        .param("role", "PARENT")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken()))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false));
     }
@@ -333,6 +445,73 @@ class AdminControllerIntegrationTest {
                 .andExpect(jsonPath("$.data.content[0].createdAt").exists());
     }
 
+    @Test
+    void userMutationsAreAuditedWithActorAndUtcTimestamps() throws Exception {
+        Instant startedAt = Instant.now().minusSeconds(2);
+        String username = uniqueUsername();
+        ownedUsernames.add(username);
+        var createResult = mockMvc.perform(post("/api/v1/admin/users")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"fullName":"Original Audit User","username":"%s",
+                                 "email":"%s@example.test","role":"PARENT"}
+                                """.formatted(username, username)))
+                .andExpect(status().isCreated())
+                .andReturn();
+        JsonNode created = objectMapper.readTree(createResult.getResponse().getContentAsString());
+        long userId = created.path("data").path("user").path("id").asLong();
+        String temporaryPassword = created.path("data").path("temporaryPassword").asText();
+
+        mockMvc.perform(put("/api/v1/admin/users/{id}", userId)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"fullName":"Updated Audit User","username":"%s",
+                                 "email":"%s@example.test"}
+                                """.formatted(username, username)))
+                .andExpect(status().isOk());
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                        .patch("/api/v1/admin/users/{id}/deactivate", userId)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken()))
+                .andExpect(status().isOk());
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(java.util.Map.of(
+                                "usernameOrEmail", username, "password", temporaryPassword))))
+                .andExpect(status().isUnauthorized());
+
+        User deactivated = userRepository.findById(userId).orElseThrow();
+        assertEquals("Updated Audit User", deactivated.getFullName());
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                        .patch("/api/v1/admin/users/{id}/activate", userId)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken()))
+                .andExpect(status().isOk());
+        mockMvc.perform(post("/api/v1/admin/users/{id}/reset-password", userId)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken()))
+                .andExpect(result -> assertEquals(200, result.getResponse().getStatus(),
+                        result.getResponse().getContentAsString()))
+                .andExpect(jsonPath("$.data.temporaryPassword").isNotEmpty());
+
+        Set<String> expectedActions = Set.of(
+                "USER_CREATED", "USER_UPDATED", "USER_DEACTIVATED",
+                "USER_ACTIVATED", "USER_PASSWORD_RESET");
+        List<AuditLog> auditRows = auditLogRepository.findAll().stream()
+                .filter(log -> Long.valueOf(userId).equals(log.getTargetEntityId())
+                        && "USER".equals(log.getTargetEntityType())
+                        && expectedActions.contains(log.getActionType()))
+                .toList();
+        assertEquals(expectedActions.size(), auditRows.size());
+        Instant completedAt = Instant.now().plusSeconds(2);
+        for (AuditLog auditRow : auditRows) {
+            assertEquals(admin.getId(), auditRow.getAdminUserId());
+            assertTrue(!auditRow.getCreatedAtUtc().isBefore(startedAt));
+            assertTrue(!auditRow.getCreatedAtUtc().isAfter(completedAt));
+            assertFalse(String.valueOf(auditRow.getOldValue()).contains(temporaryPassword));
+            assertFalse(String.valueOf(auditRow.getNewValue()).contains(temporaryPassword));
+        }
+    }
+
     private String adminToken() {
         return jwtService.generateAccessToken(admin);
     }
@@ -354,5 +533,28 @@ class AdminControllerIntegrationTest {
 
     private String uniqueUsername() {
         return "admin-controller-" + UUID.randomUUID().toString().replace("-", "");
+    }
+
+    private int countNamedField(JsonNode node, String name) {
+        if (node.isObject()) {
+            int count = 0;
+            var fields = node.fields();
+            while (fields.hasNext()) {
+                var field = fields.next();
+                if (name.equals(field.getKey())) {
+                    count++;
+                }
+                count += countNamedField(field.getValue(), name);
+            }
+            return count;
+        }
+        if (node.isArray()) {
+            int count = 0;
+            for (JsonNode child : node) {
+                count += countNamedField(child, name);
+            }
+            return count;
+        }
+        return 0;
     }
 }

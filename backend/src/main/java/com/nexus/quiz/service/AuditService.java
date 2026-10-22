@@ -75,6 +75,7 @@ public class AuditService {
 
     private boolean containsSensitiveWord(String value) {
         String normalized = value.toLowerCase(java.util.Locale.ROOT);
-        return normalized.contains("password") || normalized.contains("passwd");
+        return !normalized.equals("mustchangepassword")
+                && (normalized.contains("password") || normalized.contains("passwd"));
     }
 }

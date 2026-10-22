@@ -98,7 +98,49 @@ The SPA will be available at **http://localhost:5173**.
 
 ### Admin setup order
 
-Create admin records in dependency order: **academic year → class → subject → faculty user → student user (with a class) → faculty assignment → parent user → parent link**. Users are created from **Admin → Users**; classes and academic years are managed under **Admin → Classes**.
+Create records in this dependency order: **academic year → class → subject → faculty user → student user (with a class) → faculty assignment → parent user → parent-student link**. Users are created from **Admin → Users**; classes and academic years are managed under **Admin → Classes**.
+
+### Admin API overview
+
+Admin operations are under `/api/v1/admin` and require an Admin access token:
+
+| Area | Endpoints |
+|------|-----------|
+| Users | `GET/POST /users`, `GET/PUT /users/{id}`, `PATCH /users/{id}/activate`, `PATCH /users/{id}/deactivate`, `POST /users/{id}/reset-password`, `POST /users/bulk-upload`, `GET /users/template/{role}` |
+| Academic structure | CRUD for `/academic-years`, `/classes`, and `/subjects` |
+| Relationships | `GET/POST /faculty-assignments`, `DELETE /faculty-assignments/{id}`, `GET/POST /parent-links`, `DELETE /parent-links/{id}` |
+| School settings | `GET/PUT /settings`, `POST /settings/logo` |
+| Audit | `GET /audit-log` (supports action and date filters) |
+
+The public branding endpoint is `GET /api/v1/settings`; logos are served from
+`GET /api/v1/files/logo/{filename}`. Profile photos require authentication.
+
+### Running backend tests
+
+Tests use the Spring `test` profile, connect only to the separate local
+`nexus_quiz_test` database, and let Flyway apply the schema migrations. No
+Testcontainers or Docker is used.
+
+1. Create the test database and grant the configured test user access:
+
+```sql
+CREATE DATABASE nexus_quiz_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+GRANT ALL PRIVILEGES ON nexus_quiz_test.* TO 'nexus_user'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+2. Set `DB_USERNAME` and `DB_PASSWORD` to credentials that can access that
+   database. From PowerShell, run:
+
+```powershell
+cd backend
+$env:DB_USERNAME = "nexus_user"
+$env:DB_PASSWORD = "your_password"
+mvn clean verify
+```
+
+The test profile uses a test-only JWT secret and a datasource URL fixed to
+`nexus_quiz_test`; it does not use or migrate `nexus_quiz`.
 
 ---
 
