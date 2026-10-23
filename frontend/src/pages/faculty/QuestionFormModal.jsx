@@ -280,10 +280,10 @@ export default function QuestionFormModal({
       const body = new FormData();
       body.append('image', operation.file);
       const response = await axiosInstance.post(`/faculty/questions/${operation.questionId}/image`, body);
-      responseData(response);
+      return responseData(response);
     } else {
       const response = await axiosInstance.delete(`/faculty/questions/${operation.questionId}/image`);
-      responseData(response);
+      return responseData(response);
     }
   }
 
@@ -291,10 +291,10 @@ export default function QuestionFormModal({
     if (!pendingImageOperation) return;
     setSaving(true);
     try {
-      await executeImageOperation(pendingImageOperation);
+      const savedQuestion = await executeImageOperation(pendingImageOperation);
       toast.success(pendingImageOperation.kind === 'upload' ? 'Question image uploaded' : 'Question image removed');
       setPendingImageOperation(null);
-      await onSaved();
+      await onSaved(savedQuestion);
       onClose();
     } catch (requestError) {
       const message = errorMessage(requestError);
@@ -381,17 +381,18 @@ export default function QuestionFormModal({
 
       if (imageOperation) {
         try {
-          await executeImageOperation(imageOperation);
+          const updatedQuestion = await executeImageOperation(imageOperation);
+          await onSaved(updatedQuestion ?? savedQuestion);
         } catch (imageError) {
           setPendingImageOperation(imageOperation);
           toast.error(`Question saved, but the image change failed. Use Retry image change to try again: ${errorMessage(imageError)}`);
-          await onSaved();
           return;
         }
+      } else {
+        await onSaved(savedQuestion);
       }
 
       toast.success(editing ? 'Question updated' : 'Question created');
-      await onSaved();
       onClose();
     } catch (requestError) {
       applyServerFieldErrors(requestError, setError);
