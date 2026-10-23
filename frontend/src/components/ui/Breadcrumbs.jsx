@@ -11,6 +11,14 @@ const LABELS = {
   'parent-links': 'Parent Links',
   settings: 'School Settings',
   'audit-log': 'Audit Log',
+  faculty: 'Faculty',
+  questions: 'Question Bank',
+  quizzes: 'My Quizzes',
+  new: 'New Quiz',
+  edit: 'Edit Quiz',
+  report: 'Quiz Report',
+  grading: 'Grading Queue',
+  students: 'Students',
 };
 
 export default function Breadcrumbs() {
@@ -36,11 +44,16 @@ export default function Breadcrumbs() {
         {segments.map((segment, index) => {
           const href = `/${segments.slice(0, index + 1).join('/')}`;
           const isCurrent = index === segments.length - 1;
+          const label = segments[0] === 'faculty'
+            && segments[index - 1] === 'quizzes'
+            && /^\d+$/.test(segment)
+            ? `Quiz ${segment}`
+            : LABELS[segment] ?? segment;
           return (
             <li key={href} className="flex items-center gap-2 whitespace-nowrap">
               {isCurrent
-                ? <span aria-current="page" className="font-medium text-muted">{LABELS[segment] ?? segment}</span>
-                : <Link to={href} className="rounded text-muted hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">{LABELS[segment] ?? segment}</Link>}
+                ? <span aria-current="page" className="font-medium text-muted">{label}</span>
+                : <Link to={href} className="rounded text-muted hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">{label}</Link>}
               {!isCurrent && <ChevronRight aria-hidden="true" size={16} className="text-app-text/50" />}
             </li>
           );

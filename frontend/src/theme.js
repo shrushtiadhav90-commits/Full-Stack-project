@@ -25,6 +25,7 @@ export const defaultColors = {
   muted: '#64748B',
   border: '#E2E8F0',
   violet: '#7C3AED',
+  accent: '#0D9488',
 };
 
 export const defaultSchoolName = 'Nexus Ranaji English Medium School';

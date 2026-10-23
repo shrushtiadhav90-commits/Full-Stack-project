@@ -15,6 +15,7 @@ export default {
         muted: 'rgb(var(--color-muted) / <alpha-value>)',
         border: 'rgb(var(--color-border) / <alpha-value>)',
         violet: 'rgb(var(--color-violet) / <alpha-value>)',
+        accent: 'rgb(var(--color-accent) / <alpha-value>)',
         bg: 'rgb(var(--color-bg) / <alpha-value>)',
         card: 'rgb(var(--color-card) / <alpha-value>)',
         'app-text': 'rgb(var(--color-text) / <alpha-value>)',
@@ -22,6 +23,7 @@ export default {
 
       // ── Typography ──────────────────────────────────────────────────────────
       fontFamily: {
+        poppins: ['Poppins', 'ui-sans-serif', 'system-ui', 'sans-serif'],
         sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
       },
 

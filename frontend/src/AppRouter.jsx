@@ -13,6 +13,9 @@ import UsersPage from './pages/admin/UsersPage';
 import { ClassesPage, SubjectsPage } from './pages/admin/AcademicStructurePages';
 import FacultyAssignmentsPage from './pages/admin/FacultyAssignmentsPage';
 import ParentLinksPage from './pages/admin/ParentLinksPage';
+import FacultyLayout from './layouts/FacultyLayout';
+import FacultyDashboard from './pages/faculty/FacultyDashboard';
+import FacultyPlaceholderPage from './pages/faculty/FacultyPlaceholderPage';
 import { EmptyState, PageHeader } from './components/ui';
 import { Compass, LogOut } from 'lucide-react';
 
@@ -144,13 +147,23 @@ export default function AppRouter() {
         )}
       />
       <Route
-        path="/faculty/dashboard"
+        path="/faculty"
         element={(
           <ProtectedRoute allowedRoles={['FACULTY']}>
-            <Dashboard role="FACULTY" />
+            <FacultyLayout />
           </ProtectedRoute>
         )}
-      />
+      >
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<FacultyDashboard />} />
+        <Route path="questions" element={<FacultyPlaceholderPage page="questions" />} />
+        <Route path="quizzes" element={<FacultyPlaceholderPage page="quizzes" />} />
+        <Route path="quizzes/new" element={<FacultyPlaceholderPage page="newQuiz" />} />
+        <Route path="quizzes/:id/edit" element={<FacultyPlaceholderPage page="editQuiz" />} />
+        <Route path="quizzes/:id/report" element={<FacultyPlaceholderPage page="quizReport" />} />
+        <Route path="grading" element={<FacultyPlaceholderPage page="grading" />} />
+        <Route path="students" element={<FacultyPlaceholderPage page="students" />} />
+      </Route>
       <Route
         path="/admin"
         element={(
