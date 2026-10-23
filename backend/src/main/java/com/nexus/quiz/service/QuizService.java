@@ -566,24 +566,63 @@ public class QuizService {
             Quiz.EffectiveStatus status,
             Long subjectId,
             Long classId) {
+        return listMyQuizzes(page, size, "createdAt,desc", status, subjectId, classId);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<QuizResponse> listMyQuizzes(
+            int page,
+            int size,
+            String sort,
+            Quiz.EffectiveStatus status,
+            Long subjectId,
+            Long classId) {
         Long facultyId = requireFacultyId();
         if (page < 0 || size < 1 || size > MAX_PAGE_SIZE) {
             throw new IllegalArgumentException("Page must be non-negative and size must be between 1 and 100");
         }
+        String[] sortParts = sort == null || sort.isBlank()
+                ? new String[]{"createdAt", "desc"} : sort.split(",", 2);
+        String sortField = sortParts[0].trim();
+        boolean ascending = sortParts.length == 1 || "asc".equalsIgnoreCase(sortParts[1].trim());
+        if (!Set.of("id", "title", "createdAt", "startTime", "endTime", "totalMarks", "status")
+                .contains(sortField)
+                || (sortParts.length > 1 && !Set.of("asc", "desc").contains(sortParts[1].trim().toLowerCase()))) {
+            throw new IllegalArgumentException("Unsupported quiz sort field or direction");
+        }
         Instant now = Instant.now();
-        List<QuizResponse> filtered = quizRepository.findByCreatedByIdOrderByCreatedAtDescIdDesc(facultyId)
-                .stream()
+        List<Quiz> quizzes = quizRepository.findByCreatedByIdOrderByCreatedAtDescIdDesc(facultyId).stream()
                 .filter(quiz -> hasCurrentAssignments(quiz, facultyId))
                 .filter(quiz -> subjectId == null || quiz.getSubject().getId().equals(subjectId))
                 .filter(quiz -> status == null || quiz.effectiveStatusAt(now) == status)
                 .filter(quiz -> classId == null || quizClassRepository.findByQuizIdOrderByIdAsc(quiz.getId())
                         .stream().anyMatch(quizClass -> quizClass.getSchoolClass().getId().equals(classId)))
+                .sorted(quizComparator(sortField, ascending))
+                .toList();
+        List<QuizResponse> filtered = quizzes
+                .stream()
                 .map(this::toResponse)
                 .toList();
         int start = (int) Math.min((long) page * size, filtered.size());
         int end = Math.min(start + size, filtered.size());
         return new PageResponse<>(filtered.subList(start, end), page, size,
                 filtered.size(), (filtered.size() + size - 1) / size);
+    }
+
+    private java.util.Comparator<Quiz> quizComparator(String field, boolean ascending) {
+        java.util.Comparator<Quiz> comparator = switch (field) {
+            case "id" -> java.util.Comparator.comparing(Quiz::getId);
+            case "title" -> java.util.Comparator.comparing(Quiz::getTitle, String.CASE_INSENSITIVE_ORDER);
+            case "startTime" -> java.util.Comparator.comparing(
+                    Quiz::getStartTime, java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()));
+            case "endTime" -> java.util.Comparator.comparing(
+                    Quiz::getEndTime, java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()));
+            case "totalMarks" -> java.util.Comparator.comparing(Quiz::getTotalMarks);
+            case "status" -> java.util.Comparator.comparing(quiz -> quiz.getStatus().name());
+            default -> java.util.Comparator.comparing(
+                    Quiz::getCreatedAt, java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()));
+        };
+        return ascending ? comparator : comparator.reversed();
     }
 
     private Long requireFacultyId() {
@@ -635,6 +674,14 @@ public class QuizService {
         return !classes.isEmpty() && classes.stream().allMatch(quizClass ->
                 facultyAssignmentRepository.existsByFacultyIdAndSchoolClassIdAndSubjectId(
                         facultyId, quizClass.getSchoolClass().getId(), quiz.getSubject().getId()));
+    }
+
+    public boolean hasCurrentAssignmentsForFaculty(Quiz quiz, Long facultyId) {
+        return hasCurrentAssignments(quiz, facultyId);
+    }
+
+    public QuizResponse toFacultyResponse(Quiz quiz) {
+        return toResponse(quiz);
     }
 
     private void validateRequest(QuizRequest request) {

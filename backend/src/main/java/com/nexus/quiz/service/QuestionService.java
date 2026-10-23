@@ -167,6 +167,41 @@ public class QuestionService {
         questionRepository.save(question);
     }
 
+    @Transactional
+    public QuestionResponse deleteQuestionImage(Long questionId) {
+        Long facultyId = requireFacultyId();
+        Question question = requireOwnedActiveQuestion(questionId, facultyId);
+        String previousImageUrl = question.getImageUrl();
+        if (previousImageUrl != null) {
+            question.setImageUrl(null);
+            questionRepository.save(question);
+            deleteImageUnlessSnapshotted(previousImageUrl);
+        }
+        return toResponse(question);
+    }
+
+    @Transactional
+    public QuestionResponse uploadQuestionImage(Long questionId, MultipartFile image) {
+        Long facultyId = requireFacultyId();
+        if (image == null || image.isEmpty()) {
+            throw new ServiceValidationException("image", "A question image is required");
+        }
+        Question question = requireOwnedActiveQuestion(questionId, facultyId);
+        String previousImageUrl = question.getImageUrl();
+        String replacementImageUrl = storeImage(image);
+        question.setImageUrl(replacementImageUrl);
+        try {
+            Question saved = questionRepository.save(question);
+            if (previousImageUrl != null && !previousImageUrl.equals(replacementImageUrl)) {
+                deleteImageUnlessSnapshotted(previousImageUrl);
+            }
+            return toResponse(saved);
+        } catch (RuntimeException exception) {
+            deleteStoredImage(replacementImageUrl);
+            throw exception;
+        }
+    }
+
     @Transactional(readOnly = true)
     public QuestionResponse getQuestion(Long questionId) {
         Long facultyId = requireFacultyId();

@@ -15,6 +15,8 @@ public interface QuizQuestionSnapshotRepository
 
     List<QuizQuestionSnapshot> findByQuizIdOrderByIdAsc(Long quizId);
 
+    java.util.Optional<QuizQuestionSnapshot> findByQuizIdAndQuestionId(Long quizId, Long questionId);
+
     @Modifying
     @Query(value = """
             INSERT IGNORE INTO quiz_question_snapshots
