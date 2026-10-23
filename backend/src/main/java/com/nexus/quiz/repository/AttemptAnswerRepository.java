@@ -31,7 +31,7 @@ public interface AttemptAnswerRepository extends JpaRepository<AttemptAnswer, Lo
             select new com.nexus.quiz.dto.faculty.GradingQueueItemResponse(
                 answer.id, quiz.id, quiz.title, student.user.fullName,
                 schoolClass.name, schoolClass.section, snapshot.snapshotText,
-                snapshot.modelAnswer, answer.textAnswer, snapshot.marks,
+                snapshot.imageUrl, snapshot.modelAnswer, answer.textAnswer, snapshot.marks,
                 attempt.id)
             from AttemptAnswer answer
             join answer.attempt attempt

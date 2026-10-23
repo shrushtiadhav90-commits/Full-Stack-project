@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoadingScreen from './components/common/LoadingScreen';
@@ -19,8 +20,11 @@ import FacultyPlaceholderPage from './pages/faculty/FacultyPlaceholderPage';
 import QuestionBankPage from './pages/faculty/QuestionBankPage';
 import MyQuizzesPage from './pages/faculty/MyQuizzesPage';
 import QuizFormPage from './pages/faculty/QuizFormPage';
+import GradingQueuePage from './pages/faculty/GradingQueuePage';
 import { EmptyState, PageHeader } from './components/ui';
 import { Compass, LogOut } from 'lucide-react';
+
+const QuizReportPage = lazy(() => import('./pages/faculty/QuizReportPage'));
 
 function HomeRedirect() {
   const { user, isLoading } = useAuth();
@@ -163,8 +167,8 @@ export default function AppRouter() {
         <Route path="quizzes" element={<MyQuizzesPage />} />
         <Route path="quizzes/new" element={<QuizFormPage />} />
         <Route path="quizzes/:id/edit" element={<QuizFormPage />} />
-        <Route path="quizzes/:id/report" element={<FacultyPlaceholderPage page="quizReport" />} />
-        <Route path="grading" element={<FacultyPlaceholderPage page="grading" />} />
+        <Route path="quizzes/:id/report" element={<Suspense fallback={<LoadingScreen />}><QuizReportPage /></Suspense>} />
+        <Route path="grading" element={<GradingQueuePage />} />
         <Route path="students" element={<FacultyPlaceholderPage page="students" />} />
       </Route>
       <Route

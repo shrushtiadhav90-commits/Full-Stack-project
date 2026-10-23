@@ -5,6 +5,8 @@ import java.math.BigDecimal;
 public record QuizReportStudentResponse(
         Long studentId,
         String studentName,
+        String className,
+        String section,
         BigDecimal bestAttemptPercentage,
         int attemptsUsed,
         String status) {

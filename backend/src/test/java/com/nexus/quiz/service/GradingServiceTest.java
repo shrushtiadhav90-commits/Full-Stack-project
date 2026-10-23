@@ -1,6 +1,7 @@
 package com.nexus.quiz.service;
 
 import com.nexus.quiz.dto.faculty.GradeAnswerResponse;
+import com.nexus.quiz.dto.faculty.GradingQueueItemResponse;
 import com.nexus.quiz.entity.*;
 import com.nexus.quiz.events.AttemptGradedEvent;
 import com.nexus.quiz.exception.ConflictException;
@@ -207,6 +208,22 @@ class GradingServiceTest {
         assertThrows(ConflictException.class,
                 () -> service.gradeAnswer(9L, BigDecimal.ONE, null));
         verify(answerRepository, never()).save(any());
+    }
+
+    @Test
+    void gradingQueueIncludesSnapshotImageUrlAndClassDetails() {
+        GradingQueueItemResponse item = new GradingQueueItemResponse(
+                70L, 30L, "Quiz", "Learner", "Class 6", "A",
+                "Explain your answer", "/api/v1/files/question-images/example.webp",
+                "Expected answer", "Student response", 5, 50L);
+        when(answerRepository.findPendingShortAnswers(
+                eq(1L), isNull(), isNull(), any(PageRequest.class)))
+                .thenReturn(new PageImpl<>(List.of(item), PageRequest.of(0, 20), 1));
+
+        var queue = service.getGradingQueue(0, 20, null, null);
+
+        assertEquals("/api/v1/files/question-images/example.webp", queue.content().getFirst().imageUrl());
+        assertEquals("Class 6", queue.content().getFirst().className());
     }
 
     private AttemptAnswer answer(Long id, QuestionType type, String selectedOption) {

@@ -54,6 +54,8 @@ class QuizReportServiceTest {
         assertEquals(2, report.attemptedCount());
         assertEquals(1, report.notAttemptedCount());
         assertEquals("B Learner", report.studentsNotAttempted().getFirst().studentName());
+        assertEquals("Class 6", report.studentsNotAttempted().getFirst().className());
+        assertEquals("A", report.studentsNotAttempted().getFirst().section());
         assertEquals(new BigDecimal("60.00"), report.classAverage());
         assertEquals(new BigDecimal("90.00"), report.highestPercentage());
         assertEquals(new BigDecimal("30.00"), report.lowestPercentage());

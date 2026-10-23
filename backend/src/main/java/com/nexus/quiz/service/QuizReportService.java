@@ -92,6 +92,8 @@ public class QuizReportService {
             QuizReportStudentResponse response = new QuizReportStudentResponse(
                     student.getId(),
                     student.getUser().getFullName(),
+                    student.getSchoolClass().getName(),
+                    student.getSchoolClass().getSection(),
                     best == null ? null : best.getPercentage(),
                     studentAttempts.size(),
                     status);
