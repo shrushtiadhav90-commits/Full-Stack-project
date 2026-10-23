@@ -17,6 +17,7 @@ import FacultyLayout from './layouts/FacultyLayout';
 import FacultyDashboard from './pages/faculty/FacultyDashboard';
 import FacultyPlaceholderPage from './pages/faculty/FacultyPlaceholderPage';
 import QuestionBankPage from './pages/faculty/QuestionBankPage';
+import MyQuizzesPage from './pages/faculty/MyQuizzesPage';
 import { EmptyState, PageHeader } from './components/ui';
 import { Compass, LogOut } from 'lucide-react';
 
@@ -158,7 +159,7 @@ export default function AppRouter() {
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<FacultyDashboard />} />
         <Route path="questions" element={<QuestionBankPage />} />
-        <Route path="quizzes" element={<FacultyPlaceholderPage page="quizzes" />} />
+        <Route path="quizzes" element={<MyQuizzesPage />} />
         <Route path="quizzes/new" element={<FacultyPlaceholderPage page="newQuiz" />} />
         <Route path="quizzes/:id/edit" element={<FacultyPlaceholderPage page="editQuiz" />} />
         <Route path="quizzes/:id/report" element={<FacultyPlaceholderPage page="quizReport" />} />
