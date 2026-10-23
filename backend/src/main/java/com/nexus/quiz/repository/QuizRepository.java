@@ -2,6 +2,12 @@ package com.nexus.quiz.repository;
 
 import com.nexus.quiz.entity.Quiz;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-public interface QuizRepository extends JpaRepository<Quiz, Long> {
+import java.util.List;
+
+public interface QuizRepository extends JpaRepository<Quiz, Long>,
+        JpaSpecificationExecutor<Quiz> {
+
+    List<Quiz> findByCreatedByIdOrderByCreatedAtDescIdDesc(Long facultyId);
 }

@@ -38,6 +38,12 @@ public class FileController {
         return serve("profile-photos", filename);
     }
 
+    // Access should be tightened to students with an active attempt in a later phase.
+    @GetMapping("/question-images/{filename:.+}")
+    public ResponseEntity<Resource> getQuestionImage(@PathVariable String filename) throws IOException {
+        return serveQuestionImage(filename);
+    }
+
     private ResponseEntity<Resource> serve(String subfolder, String filename) throws IOException {
         validateFilename(filename);
         Resource resource;
@@ -58,6 +64,28 @@ public class FileController {
         }
         return ResponseEntity.ok()
                 .contentType(mediaType)
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.inline()
+                        .filename(filename, StandardCharsets.UTF_8).build().toString())
+                .body(resource);
+    }
+
+    private ResponseEntity<Resource> serveQuestionImage(String filename) throws IOException {
+        validateFilename(filename);
+        Resource resource;
+        try {
+            resource = fileStorageService.load("question-images", filename);
+        } catch (IOException exception) {
+            throw new ResourceNotFoundException("File not found");
+        }
+        String detectedType;
+        try (InputStream input = resource.getInputStream()) {
+            detectedType = tika.detect(input);
+        }
+        if (!java.util.Set.of("image/jpeg", "image/png", "image/webp").contains(detectedType)) {
+            throw new ResourceNotFoundException("File not found");
+        }
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(detectedType))
                 .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.inline()
                         .filename(filename, StandardCharsets.UTF_8).build().toString())
                 .body(resource);

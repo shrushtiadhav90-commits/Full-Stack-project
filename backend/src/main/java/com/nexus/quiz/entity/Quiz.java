@@ -49,10 +49,10 @@ public class Quiz {
     @Column(name = "duration_minutes", nullable = false)
     private Integer durationMinutes;
 
-    @Column(name = "start_time", nullable = false, columnDefinition = "DATETIME(6)")
+    @Column(name = "start_time", columnDefinition = "DATETIME(6)")
     private Instant startTime;
 
-    @Column(name = "end_time", nullable = false, columnDefinition = "DATETIME(6)")
+    @Column(name = "end_time", columnDefinition = "DATETIME(6)")
     private Instant endTime;
 
     @Column(name = "max_attempts", nullable = false)

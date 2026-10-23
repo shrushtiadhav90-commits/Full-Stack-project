@@ -72,6 +72,13 @@ public class GlobalExceptionHandler {
         return failure(HttpStatus.BAD_REQUEST, exception.getMessage(), null);
     }
 
+    @ExceptionHandler(ServiceValidationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleServiceValidation(
+            ServiceValidationException exception) {
+        return failure(HttpStatus.BAD_REQUEST, exception.getMessage(),
+                Map.of("fieldErrors", exception.getFieldErrors()));
+    }
+
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ApiResponse<Void>> handleAuthentication(AuthenticationException exception) {
         return failure(HttpStatus.UNAUTHORIZED, exception.getMessage(), null);

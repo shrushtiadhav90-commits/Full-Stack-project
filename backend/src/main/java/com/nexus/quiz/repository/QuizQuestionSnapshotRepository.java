@@ -5,4 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface QuizQuestionSnapshotRepository
         extends JpaRepository<QuizQuestionSnapshot, Long> {
+
+    boolean existsByImageUrl(String imageUrl);
 }

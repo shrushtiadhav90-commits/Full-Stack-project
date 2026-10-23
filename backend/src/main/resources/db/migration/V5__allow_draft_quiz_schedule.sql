@@ -1,0 +1,3 @@
+ALTER TABLE quizzes
+    MODIFY COLUMN start_time DATETIME(6) NULL,
+    MODIFY COLUMN end_time DATETIME(6) NULL;
