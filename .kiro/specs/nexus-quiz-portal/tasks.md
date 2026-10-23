@@ -84,7 +84,6 @@ Full-stack implementation of the Nexus Quiz Portal for Nexus Ranaji English Medi
 
 ### Phase 2 — Database + Authentication
 
-- [ ] 3. Implement JPA entities, utilities, and security infrastructure
   - [ ] 3.1 Create core JPA entities: `User`, `RefreshToken`, `AcademicYear`, `Class`, `Subject`
     - All datetime fields as `java.time.Instant`; never `java.util.Date` or `java.sql.Timestamp`
     - `User` entity: `id`, `fullName`, `username`, `email`, `phone`, `passwordHash` (`@JsonIgnore`), `role` (enum: STUDENT, PARENT, FACULTY, ADMIN), `isActive`, `mustChangePassword`, `failedLoginCount`, `lockedUntilUtc`, `profilePhotoUrl`, `createdAtUtc`, `updatedAtUtc`
