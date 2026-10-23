@@ -101,17 +101,7 @@ public class Quiz {
     private Instant updatedAt;
 
     public EffectiveStatus effectiveStatusAt(Instant now) {
-        Objects.requireNonNull(now, "now must not be null");
-        return switch (status) {
-            case DRAFT -> EffectiveStatus.DRAFT;
-            case CLOSED -> EffectiveStatus.CLOSED;
-            case SCHEDULED -> {
-                if (!now.isBefore(endTime)) {
-                    yield EffectiveStatus.CLOSED;
-                }
-                yield now.isBefore(startTime) ? EffectiveStatus.SCHEDULED : EffectiveStatus.LIVE;
-            }
-        };
+        return QuizStatusHelper.derivedStatusAt(this, Objects.requireNonNull(now, "now must not be null"));
     }
 
     @PrePersist

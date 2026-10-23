@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 class QuizTest {
 
@@ -20,10 +20,14 @@ class QuizTest {
                 .build();
 
         assertEquals(Quiz.EffectiveStatus.SCHEDULED,
-                quiz.effectiveStatusAt(START.minusNanos(1)));
+                quiz.effectiveStatusAt(START.minusMillis(1)));
+        assertFalse(QuizStatusHelper.isOpenForAttempts(quiz, START.minusMillis(1)));
         assertEquals(Quiz.EffectiveStatus.LIVE, quiz.effectiveStatusAt(START));
-        assertEquals(Quiz.EffectiveStatus.LIVE, quiz.effectiveStatusAt(END.minusNanos(1)));
+        assertTrue(QuizStatusHelper.isOpenForAttempts(quiz, START));
+        assertEquals(Quiz.EffectiveStatus.LIVE, quiz.effectiveStatusAt(END.minusMillis(1)));
+        assertTrue(QuizStatusHelper.isOpenForAttempts(quiz, END.minusMillis(1)));
         assertEquals(Quiz.EffectiveStatus.CLOSED, quiz.effectiveStatusAt(END));
+        assertFalse(QuizStatusHelper.isOpenForAttempts(quiz, END));
     }
 
     @Test
